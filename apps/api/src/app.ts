@@ -14,6 +14,8 @@ import { withdrawalsRoutes } from './modules/withdrawals/withdrawals.routes';
 import { teachingEvaluationRoutes } from './modules/teaching-evaluation/teaching-evaluation.routes';
 import { offerRoutes } from './modules/offer/offer.routes';
 import { auditRoutes } from './modules/audit/audit.routes';
+import { periodsRoutes } from './modules/admin/periods/periods.routes';
+import { adminUsersRoutes } from './modules/admin/users/admin-users.routes';
 
 const app = express();
 
@@ -33,6 +35,8 @@ app.use('/api/withdrawals', withdrawalsRoutes);
 app.use('/api/teaching-evaluation', teachingEvaluationRoutes);
 app.use('/api/offer', offerRoutes);
 app.use('/api/admin', auditRoutes);
+app.use('/api/admin/periods', periodsRoutes);
+app.use('/api/admin/users', adminUsersRoutes);
 
 app.use(errorHandlerMiddleware);
 

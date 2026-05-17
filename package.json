@@ -12,9 +12,13 @@
     "build:api": "npm run build --workspace=apps/api",
     "build:web": "npm run build --workspace=apps/web",
     "db:schema": "node scripts/run-schema.js",
-    "db:seed": "node scripts/run-seeders.js"
+    "db:seed": "node scripts/run-seeders.js",
+    "db:create-admin": "node scripts/create-admin.js"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0"
   }
 }

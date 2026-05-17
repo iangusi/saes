@@ -10,6 +10,7 @@ export interface UserRow extends RowDataPacket {
   correo_contacto: string;
   password_hash: string;
   activo: number;
+  bloqueado: number;
   roles: string;
 }
 
@@ -17,7 +18,7 @@ export class AuthRepository {
   async findByIdentificador(identificador: string): Promise<UserRow | null> {
     const [rows] = await pool.query<UserRow[]>(
       `SELECT u.id_usuario, u.identificador, u.nombre, u.apellido_paterno,
-              u.apellido_materno, u.correo_contacto, u.password_hash, u.activo,
+              u.apellido_materno, u.correo_contacto, u.password_hash, u.activo, u.bloqueado,
               GROUP_CONCAT(r.nombre ORDER BY r.nombre SEPARATOR ',') AS roles
        FROM usuario u
        LEFT JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario
@@ -32,7 +33,7 @@ export class AuthRepository {
   async findByCorreo(correo: string): Promise<UserRow | null> {
     const [rows] = await pool.query<UserRow[]>(
       `SELECT u.id_usuario, u.identificador, u.nombre, u.apellido_paterno,
-              u.apellido_materno, u.correo_contacto, u.password_hash, u.activo,
+              u.apellido_materno, u.correo_contacto, u.password_hash, u.activo, u.bloqueado,
               GROUP_CONCAT(r.nombre ORDER BY r.nombre SEPARATOR ',') AS roles
        FROM usuario u
        LEFT JOIN usuario_rol ur ON ur.id_usuario = u.id_usuario

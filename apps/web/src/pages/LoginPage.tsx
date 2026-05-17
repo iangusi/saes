@@ -6,6 +6,12 @@ import { authService } from '../services/auth.service';
 import { useAuthStore } from '../state/auth.store';
 import { useState } from 'react';
 
+function getRedirectPath(roles: string[]): string {
+  if (roles.includes('admin')) return '/admin/periods';
+  if (roles.includes('profesor')) return '/dashboard';
+  return '/dashboard';
+}
+
 const schema = z.object({
   identificador: z.string().min(1, 'Campo requerido'),
   password: z.string().min(1, 'Campo requerido'),
@@ -28,7 +34,7 @@ export function LoginPage() {
     try {
       const result = await authService.login(data.identificador, data.password);
       setAuth(result.token, result.user);
-      navigate('/dashboard');
+      navigate(getRedirectPath(result.user.roles));
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??

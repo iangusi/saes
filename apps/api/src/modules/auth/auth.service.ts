@@ -21,6 +21,10 @@ export class AuthService {
       throw new UnauthorizedError('Credenciales inválidas');
     }
 
+    if (user.bloqueado) {
+      throw new UnauthorizedError('Cuenta bloqueada. Contacta a control escolar.');
+    }
+
     const passwordOk = await bcrypt.compare(dto.password, user.password_hash);
     if (!passwordOk) {
       throw new UnauthorizedError('Credenciales inválidas');
