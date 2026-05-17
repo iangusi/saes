@@ -20,6 +20,7 @@ import { PeriodsPage } from '../pages/admin/PeriodsPage';
 import { UsersPage } from '../pages/admin/UsersPage';
 import { OfferAdminPage } from '../pages/admin/OfferAdminPage';
 import { ExceptionsPage } from '../pages/admin/ExceptionsPage';
+import { NotificationsPage } from '../pages/admin/NotificationsPage';
 
 export default function App() {
   return (
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="/admin/periods" element={<AdminLayout><PeriodsPage /></AdminLayout>} />
         <Route path="/admin/users" element={<AdminLayout><UsersPage /></AdminLayout>} />
         <Route path="/admin/offer" element={<AdminLayout><OfferAdminPage /></AdminLayout>} />
+        <Route path="/admin/notifications" element={<AdminLayout><NotificationsPage /></AdminLayout>} />
         <Route path="/admin/exceptions" element={<AdminLayout><ExceptionsPage /></AdminLayout>} />
       </Route>
 

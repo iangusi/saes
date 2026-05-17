@@ -6,6 +6,7 @@ const adminNavItems = [
   { to: '/admin/periods', label: 'Periodos' },
   { to: '/admin/users', label: 'Usuarios' },
   { to: '/admin/offer', label: 'Oferta Académica' },
+  { to: '/admin/notifications', label: 'Notificaciones' },
   { to: '/admin/exceptions', label: 'Excepciones' },
 ];
 

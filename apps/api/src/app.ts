@@ -17,6 +17,8 @@ import { auditRoutes } from './modules/audit/audit.routes';
 import { periodsRoutes } from './modules/admin/periods/periods.routes';
 import { adminUsersRoutes } from './modules/admin/users/admin-users.routes';
 import { adminOfferRoutes } from './modules/admin/offer/admin-offer.routes';
+import { adminNotificationsRoutes } from './modules/admin/notifications/admin-notifications.routes';
+import { adminExceptionsRoutes } from './modules/admin/exceptions/admin-exceptions.routes';
 
 const app = express();
 
@@ -39,6 +41,8 @@ app.use('/api/admin', auditRoutes);
 app.use('/api/admin/periods', periodsRoutes);
 app.use('/api/admin/users', adminUsersRoutes);
 app.use('/api/admin/offer', adminOfferRoutes);
+app.use('/api/admin/notifications', adminNotificationsRoutes);
+app.use('/api/admin/exceptions', adminExceptionsRoutes);
 
 app.use(errorHandlerMiddleware);
 

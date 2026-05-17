@@ -632,3 +632,149 @@ export const adminOfferService = {
   deleteHorario: (idGrupo: number, idHorario: number) =>
     api.delete(`${OFFER_BASE}/grupos/${idGrupo}/horarios/${idHorario}`),
 };
+
+// ─── Admin Notificaciones ─────────────────────────────────────────────────────
+
+export type TipoFiltro =
+  | 'todos'
+  | 'rol'
+  | 'carrera'
+  | 'plan'
+  | 'semestre'
+  | 'periodo'
+  | 'grupo'
+  | 'profesor'
+  | 'especificos';
+
+export interface FiltroNotificacion {
+  tipo: TipoFiltro;
+  id_rol?: string;
+  id_carrera?: number;
+  id_plan?: number;
+  semestre?: number;
+  id_periodo?: number;
+  id_grupo?: number;
+  id_profesor?: number;
+  ids_usuario?: number[];
+}
+
+export interface DestinatarioPreview {
+  id_usuario: number;
+  nombre: string;
+  apellido_paterno: string;
+  correo_contacto: string;
+  roles: string;
+}
+
+export interface NotifCarreraOption {
+  id_carrera: number;
+  nombre: string;
+  clave: string;
+}
+
+export interface NotifPlanOption {
+  id_plan: number;
+  nombre: string;
+  nombre_carrera: string;
+}
+
+export interface NotifPeriodoOption {
+  id_periodo: number;
+  nombre: string;
+  activo: number;
+}
+
+export interface NotifGrupoOption {
+  id_grupo: number;
+  clave_grupo: string;
+  nombre_materia: string;
+  id_periodo: number;
+  nombre_periodo: string;
+}
+
+export interface NotifProfesorOption {
+  id_profesor: number;
+  nombre_completo: string;
+  numero_empleado: string;
+}
+
+export interface NotifCatalogs {
+  carreras: NotifCarreraOption[];
+  planes: NotifPlanOption[];
+  periodos: NotifPeriodoOption[];
+  grupos: NotifGrupoOption[];
+  profesores: NotifProfesorOption[];
+}
+
+export interface PreviewResult {
+  usuarios: DestinatarioPreview[];
+  total: number;
+}
+
+export interface SendNotifResult {
+  enviados: number;
+  errores: string[];
+}
+
+const NOTIF_BASE = '/admin/notifications';
+
+export const adminNotificationsService = {
+  getCatalogs: () =>
+    api.get<{ data: NotifCatalogs }>(`${NOTIF_BASE}/catalogs`).then((r) => r.data.data),
+
+  preview: (filtros: FiltroNotificacion) =>
+    api.post<{ data: PreviewResult }>(`${NOTIF_BASE}/preview`, { filtros }).then((r) => r.data.data),
+
+  send: (asunto: string, cuerpo: string, filtros: FiltroNotificacion) =>
+    api
+      .post<{ data: SendNotifResult }>(`${NOTIF_BASE}/send`, { asunto, cuerpo, filtros })
+      .then((r) => r.data.data),
+};
+
+// ─── Admin Excepciones ────────────────────────────────────────────────────────
+
+export interface ExceptionGroup {
+  id_grupo: number;
+  clave_grupo: string;
+  id_materia: number;
+  nombre_materia: string;
+  creditos: number;
+  semestre_plan: number;
+  cupo_disponible: number;
+  nombre_profesor: string;
+  apellido_paterno_profesor: string;
+  horarios: string;
+}
+
+export interface ExceptionAlumno {
+  id_alumno: number;
+  id_usuario: number;
+  boleta: string;
+  nombre: string;
+  apellido_paterno: string;
+  apellido_materno: string | null;
+  semestre_actual: number;
+  nombre_plan: string;
+  nombre_carrera: string;
+}
+
+export interface ExceptionEligibilityResult {
+  alumno: ExceptionAlumno;
+  grupos: ExceptionGroup[];
+  creditosInscritos: number;
+  idPeriodo: number;
+}
+
+const EXCEPTIONS_BASE = '/admin/exceptions';
+
+export const adminExceptionsService = {
+  getEligibility: (idUsuario: number) =>
+    api
+      .get<{ data: ExceptionEligibilityResult }>(`${EXCEPTIONS_BASE}/eligibility/${idUsuario}`)
+      .then((r) => r.data.data),
+
+  submit: (dto: { idUsuario: number; grupos: number[] }) =>
+    api
+      .post<{ data: { gruposInscritos: number } }>(`${EXCEPTIONS_BASE}/submit`, dto)
+      .then((r) => r.data.data),
+};
