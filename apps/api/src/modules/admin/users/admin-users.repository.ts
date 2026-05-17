@@ -173,4 +173,101 @@ export class AdminUsersRepository {
       [idUsuario]
     );
   }
+
+  // ─── Student profile (admin view) ───────────────────────────────────────────
+
+  async getStudentByUserId(idUsuario: number): Promise<RowDataPacket | null> {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT a.id_alumno, a.id_plan, a.boleta, a.semestre_actual, a.estatus,
+              u.nombre, u.apellido_paterno, u.apellido_materno, u.correo_contacto,
+              c.nombre AS nombre_carrera, pe.nombre AS nombre_plan,
+              pe.total_creditos, pe.total_materias
+       FROM alumno a
+       JOIN usuario u ON u.id_usuario = a.id_usuario
+       JOIN plan_estudios pe ON pe.id_plan = a.id_plan
+       JOIN carrera c ON c.id_carrera = pe.id_carrera
+       WHERE a.id_usuario = ?`,
+      [idUsuario]
+    );
+    return rows[0] ?? null;
+  }
+
+  // ─── Professor profile (admin view) ─────────────────────────────────────────
+
+  async getProfessorByUserId(idUsuario: number): Promise<RowDataPacket | null> {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT p.id_profesor, p.numero_empleado, p.estatus,
+              u.nombre, u.apellido_paterno, u.apellido_materno, u.correo_contacto,
+              d.id_departamento, d.nombre AS nombre_departamento
+       FROM profesor p
+       JOIN usuario u ON u.id_usuario = p.id_usuario
+       JOIN departamento d ON d.id_departamento = p.id_departamento
+       WHERE p.id_usuario = ?`,
+      [idUsuario]
+    );
+    return rows[0] ?? null;
+  }
+
+  async getProfessorGroups(idProfesor: number): Promise<RowDataPacket[]> {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT g.id_grupo, g.clave_grupo, g.cupo_max, g.cupo_actual, g.estatus,
+              m.nombre AS nombre_materia, m.clave AS clave_materia, m.creditos,
+              pa.id_periodo, pa.nombre AS nombre_periodo, pa.activo AS periodo_activo,
+              GROUP_CONCAT(
+                CONCAT(hg.dia_semana, ' ', TIME_FORMAT(hg.hora_inicio, '%H:%i'),
+                       '-', TIME_FORMAT(hg.hora_fin, '%H:%i'), ' (', a.nombre, ')')
+                ORDER BY FIELD(hg.dia_semana,'lunes','martes','miercoles','jueves','viernes','sabado')
+                SEPARATOR ' | '
+              ) AS horarios_resumen
+       FROM grupo g
+       JOIN materia m ON m.id_materia = g.id_materia
+       JOIN periodo_academico pa ON pa.id_periodo = g.id_periodo
+       LEFT JOIN horario_grupo hg ON hg.id_grupo = g.id_grupo
+       LEFT JOIN aula a ON a.id_aula = hg.id_aula
+       WHERE g.id_profesor = ?
+       GROUP BY g.id_grupo, g.clave_grupo, g.cupo_max, g.cupo_actual, g.estatus,
+                m.nombre, m.clave, m.creditos,
+                pa.id_periodo, pa.nombre, pa.activo
+       ORDER BY pa.activo DESC, pa.fecha_inicio DESC, m.nombre ASC`,
+      [idProfesor]
+    );
+    return rows;
+  }
+
+  async getProfessorSchedule(idProfesor: number): Promise<RowDataPacket[]> {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT g.id_grupo, g.clave_grupo, m.nombre AS nombre_materia,
+              hg.dia_semana, TIME_FORMAT(hg.hora_inicio, '%H:%i') AS hora_inicio,
+              TIME_FORMAT(hg.hora_fin, '%H:%i') AS hora_fin,
+              a.nombre AS nombre_aula, a.edificio
+       FROM grupo g
+       JOIN materia m ON m.id_materia = g.id_materia
+       JOIN horario_grupo hg ON hg.id_grupo = g.id_grupo
+       JOIN aula a ON a.id_aula = hg.id_aula
+       JOIN periodo_academico pa ON pa.id_periodo = g.id_periodo AND pa.activo = 1
+       WHERE g.id_profesor = ?
+       ORDER BY FIELD(hg.dia_semana,'lunes','martes','miercoles','jueves','viernes','sabado'),
+                hg.hora_inicio`,
+      [idProfesor]
+    );
+    return rows;
+  }
+
+  async getProfessorEvaluations(idProfesor: number): Promise<RowDataPacket[]> {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT edp.id_pregunta, edp.texto, edp.tipo, edp.orden,
+              ROUND(AVG(edr.respuesta_numerica), 2) AS promedio,
+              COUNT(CASE WHEN edr.respuesta_numerica IS NOT NULL THEN 1 END) AS total_respuestas,
+              GROUP_CONCAT(edr.respuesta_texto SEPARATOR '||') AS comentarios
+       FROM encuesta_docente_respuesta edr
+       JOIN encuesta_docente_pregunta edp ON edp.id_pregunta = edr.id_pregunta
+       JOIN inscripcion i ON i.id_inscripcion = edr.id_inscripcion
+       JOIN grupo g ON g.id_grupo = i.id_grupo
+       WHERE g.id_profesor = ?
+       GROUP BY edp.id_pregunta, edp.texto, edp.tipo, edp.orden
+       ORDER BY edp.orden ASC`,
+      [idProfesor]
+    );
+    return rows;
+  }
 }

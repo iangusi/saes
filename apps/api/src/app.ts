@@ -16,6 +16,7 @@ import { offerRoutes } from './modules/offer/offer.routes';
 import { auditRoutes } from './modules/audit/audit.routes';
 import { periodsRoutes } from './modules/admin/periods/periods.routes';
 import { adminUsersRoutes } from './modules/admin/users/admin-users.routes';
+import { adminOfferRoutes } from './modules/admin/offer/admin-offer.routes';
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use('/api/offer', offerRoutes);
 app.use('/api/admin', auditRoutes);
 app.use('/api/admin/periods', periodsRoutes);
 app.use('/api/admin/users', adminUsersRoutes);
+app.use('/api/admin/offer', adminOfferRoutes);
 
 app.use(errorHandlerMiddleware);
 

@@ -5,7 +5,10 @@ import {
   CreateAdminUserDto,
   PlanOption,
   DepartamentoOption,
+  StudentProfileResult,
+  ProfessorProfileResult,
 } from '../../services/admin.service';
+import { ScheduleBoard } from '../../components/ScheduleBoard';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -61,6 +64,341 @@ const btnSecondary = 'px-4 py-2 border border-gray-300 text-gray-700 text-sm rou
 const btnDanger = 'px-3 py-1.5 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors';
 const btnWarning = 'px-3 py-1.5 bg-orange-500 text-white text-xs rounded hover:bg-orange-600 transition-colors';
 const btnSuccess = 'px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors';
+
+// ─── Large Modal (for profiles) ──────────────────────────────────────────────
+
+function LargeModal({ title, subtitle, onClose, children }: { title: string; subtitle?: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <div className="flex items-start justify-between px-6 py-4 border-b">
+          <div>
+            <h2 className="font-semibold text-gray-800 text-lg">{title}</h2>
+            {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none ml-4">×</button>
+        </div>
+        <div className="flex-1 overflow-y-auto">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function TabBar({ tabs, active, onChange }: { tabs: string[]; active: number; onChange: (i: number) => void }) {
+  return (
+    <div className="flex border-b bg-gray-50 px-6">
+      {tabs.map((tab, i) => (
+        <button
+          key={tab}
+          onClick={() => onChange(i)}
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            active === i ? 'border-ipn-guinda text-ipn-guinda' : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          {tab}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Student Profile Modal ────────────────────────────────────────────────────
+
+function StudentProfileModal({ user, onClose }: { user: AdminUser; onClose: () => void }) {
+  const [tab, setTab] = useState(0);
+  const [data, setData] = useState<StudentProfileResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    adminUsersService.getStudentProfile(user.id_usuario)
+      .then(setData)
+      .catch(() => setError('No se pudo cargar el perfil del alumno'))
+      .finally(() => setLoading(false));
+  }, [user.id_usuario]);
+
+  const fullName = `${user.nombre} ${user.apellido_paterno}${user.apellido_materno ? ` ${user.apellido_materno}` : ''}`;
+
+  const reprobadas = data?.kardex.filter((k) => k.resultado === 'reprobado') ?? [];
+  const avancePct = data
+    ? Math.round((data.creditosCompletados / (data.profile.total_creditos || 1)) * 100)
+    : 0;
+
+  const scheduleSlots = (data?.schedule ?? []).map((s) => ({
+    day: s.dia_semana,
+    start: s.hora_inicio,
+    end: s.hora_fin,
+    room: s.nombre_aula + (s.edificio ? ` (${s.edificio})` : ''),
+    materiaName: s.nombre_materia,
+  }));
+
+  return (
+    <LargeModal title={`Perfil: ${fullName}`} subtitle={data?.profile.nombre_carrera} onClose={onClose}>
+      {loading && <div className="p-12 text-center text-gray-400">Cargando...</div>}
+      {error && <div className="p-6 text-red-600">{error}</div>}
+      {!loading && !error && data && (
+        <>
+          <TabBar tabs={['Resumen', 'Kardex', 'Carga Actual']} active={tab} onChange={setTab} />
+
+          {/* TAB: Resumen */}
+          {tab === 0 && (
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  { label: 'Boleta', value: data.profile.boleta },
+                  { label: 'Semestre actual', value: data.profile.semestre_actual },
+                  { label: 'Estado', value: data.profile.estatus },
+                  { label: 'Promedio general', value: data.stats.promedio?.toFixed(2) ?? '—' },
+                  { label: 'Materias aprobadas', value: data.stats.aprobadas },
+                  { label: 'Materias reprobadas', value: reprobadas.length },
+                  { label: 'Créditos completados', value: `${data.creditosCompletados} / ${data.profile.total_creditos}` },
+                  { label: 'Avance curricular', value: `${avancePct}%` },
+                  { label: 'Plan de estudios', value: data.profile.nombre_plan },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                    <p className="text-xs text-gray-500 mb-1">{label}</p>
+                    <p className="font-semibold text-gray-800 text-sm">{value}</p>
+                  </div>
+                ))}
+              </div>
+              {reprobadas.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-red-700 mb-2">Materias reprobadas ({reprobadas.length})</p>
+                  <div className="space-y-1">
+                    {reprobadas.map((r) => (
+                      <div key={`${r.id_materia}-${r.nombre_periodo}`} className="flex justify-between text-sm bg-red-50 rounded px-3 py-2 border border-red-100">
+                        <span>{r.nombre_materia}</span>
+                        <span className="text-red-600 font-medium">{r.calificacion_final ?? '—'} — {r.nombre_periodo}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB: Kardex */}
+          {tab === 1 && (
+            <div className="p-6">
+              {data.kardex.length === 0 ? (
+                <p className="text-gray-400 text-sm text-center py-8">Sin historial académico registrado</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 border-b">
+                        <th className="text-left px-3 py-2 font-medium text-gray-600">Sem.</th>
+                        <th className="text-left px-3 py-2 font-medium text-gray-600">Clave</th>
+                        <th className="text-left px-3 py-2 font-medium text-gray-600">Materia</th>
+                        <th className="text-center px-3 py-2 font-medium text-gray-600">Créd.</th>
+                        <th className="text-left px-3 py-2 font-medium text-gray-600">Período</th>
+                        <th className="text-center px-3 py-2 font-medium text-gray-600">Cal.</th>
+                        <th className="text-center px-3 py-2 font-medium text-gray-600">Resultado</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {data.kardex.map((k, i) => (
+                        <tr key={i} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 text-gray-500">{k.semestre_plan}</td>
+                          <td className="px-3 py-2 font-mono text-xs text-gray-500">{k.clave_materia}</td>
+                          <td className="px-3 py-2">{k.nombre_materia}</td>
+                          <td className="px-3 py-2 text-center">{k.creditos}</td>
+                          <td className="px-3 py-2 text-gray-500 text-xs">{k.nombre_periodo}</td>
+                          <td className="px-3 py-2 text-center font-medium">{k.calificacion_final ?? '—'}</td>
+                          <td className="px-3 py-2 text-center">
+                            <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
+                              k.resultado === 'aprobado' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
+                            }`}>
+                              {k.resultado}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB: Carga Actual */}
+          {tab === 2 && (
+            <div className="p-6 space-y-4">
+              {data.grades.length === 0 ? (
+                <p className="text-gray-400 text-sm text-center py-8">Sin materias inscritas en el período activo</p>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-50 border-b">
+                          <th className="text-left px-3 py-2 font-medium text-gray-600">Materia</th>
+                          <th className="text-left px-3 py-2 font-medium text-gray-600">Grupo</th>
+                          <th className="text-left px-3 py-2 font-medium text-gray-600">Profesor</th>
+                          <th className="text-left px-3 py-2 font-medium text-gray-600">Evaluación</th>
+                          <th className="text-center px-3 py-2 font-medium text-gray-600">Cal.</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {data.grades.map((g, i) => (
+                          <tr key={i} className="hover:bg-gray-50">
+                            <td className="px-3 py-2">{g.nombre_materia}</td>
+                            <td className="px-3 py-2 font-mono text-xs">{g.clave_grupo}</td>
+                            <td className="px-3 py-2 text-gray-600">{g.nombre_profesor} {g.apellido_paterno_profesor}</td>
+                            <td className="px-3 py-2 text-gray-500 text-xs">{g.tipo_evaluacion ?? '—'}</td>
+                            <td className="px-3 py-2 text-center font-medium">{g.calificacion ?? '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {scheduleSlots.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-2">Horario del período activo</p>
+                      <ScheduleBoard slots={scheduleSlots} />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </LargeModal>
+  );
+}
+
+// ─── Professor Profile Modal ──────────────────────────────────────────────────
+
+function ProfessorProfileModal({ user, onClose }: { user: AdminUser; onClose: () => void }) {
+  const [tab, setTab] = useState(0);
+  const [data, setData] = useState<ProfessorProfileResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    adminUsersService.getProfessorProfile(user.id_usuario)
+      .then(setData)
+      .catch(() => setError('No se pudo cargar el perfil del profesor'))
+      .finally(() => setLoading(false));
+  }, [user.id_usuario]);
+
+  const fullName = `${user.nombre} ${user.apellido_paterno}${user.apellido_materno ? ` ${user.apellido_materno}` : ''}`;
+
+  const scheduleSlots = (data?.schedule ?? []).map((s) => ({
+    day: s.dia_semana,
+    start: s.hora_inicio,
+    end: s.hora_fin,
+    room: s.nombre_aula + (s.edificio ? ` (${s.edificio})` : ''),
+    materiaName: `${s.nombre_materia} — ${s.clave_grupo}`,
+  }));
+
+  return (
+    <LargeModal title={`Perfil: ${fullName}`} subtitle={data?.profile.nombre_departamento} onClose={onClose}>
+      {loading && <div className="p-12 text-center text-gray-400">Cargando...</div>}
+      {error && <div className="p-6 text-red-600">{error}</div>}
+      {!loading && !error && data && (
+        <>
+          <TabBar tabs={['Grupos', 'Horario', 'Evaluaciones']} active={tab} onChange={setTab} />
+
+          {/* TAB: Grupos */}
+          {tab === 0 && (
+            <div className="p-6">
+              {data.groups.length === 0 ? (
+                <p className="text-gray-400 text-sm text-center py-8">Sin grupos asignados</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 border-b">
+                        <th className="text-left px-3 py-2 font-medium text-gray-600">Período</th>
+                        <th className="text-left px-3 py-2 font-medium text-gray-600">Materia</th>
+                        <th className="text-left px-3 py-2 font-medium text-gray-600">Grupo</th>
+                        <th className="text-center px-3 py-2 font-medium text-gray-600">Cupo</th>
+                        <th className="text-left px-3 py-2 font-medium text-gray-600">Horarios</th>
+                        <th className="text-center px-3 py-2 font-medium text-gray-600">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {data.groups.map((g) => (
+                        <tr key={g.id_grupo} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 text-xs text-gray-500">
+                            {g.nombre_periodo}
+                            {g.periodo_activo ? (
+                              <span className="ml-1 inline-block px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded">activo</span>
+                            ) : null}
+                          </td>
+                          <td className="px-3 py-2">{g.nombre_materia}</td>
+                          <td className="px-3 py-2 font-mono text-xs">{g.clave_grupo}</td>
+                          <td className="px-3 py-2 text-center">{g.cupo_actual}/{g.cupo_max}</td>
+                          <td className="px-3 py-2 text-xs text-gray-500">{g.horarios_resumen ?? '—'}</td>
+                          <td className="px-3 py-2 text-center">
+                            <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
+                              g.estatus === 'abierto' ? 'bg-blue-100 text-blue-700' :
+                              g.estatus === 'cerrado' ? 'bg-gray-100 text-gray-600' :
+                              'bg-red-100 text-red-600'
+                            }`}>
+                              {g.estatus}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB: Horario */}
+          {tab === 1 && (
+            <div className="p-6">
+              {scheduleSlots.length === 0 ? (
+                <p className="text-gray-400 text-sm text-center py-8">Sin horario asignado en el período activo</p>
+              ) : (
+                <ScheduleBoard slots={scheduleSlots} />
+              )}
+            </div>
+          )}
+
+          {/* TAB: Evaluaciones */}
+          {tab === 2 && (
+            <div className="p-6 space-y-4">
+              {data.evaluations.length === 0 ? (
+                <p className="text-gray-400 text-sm text-center py-8">Sin evaluaciones docentes registradas</p>
+              ) : (
+                data.evaluations.map((ev) => (
+                  <div key={ev.id_pregunta} className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    <p className="text-sm font-medium text-gray-700 mb-2">{ev.texto}</p>
+                    {ev.tipo !== 'texto' && ev.promedio !== null ? (
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-ipn-guinda h-2 rounded-full transition-all"
+                            style={{ width: `${((ev.promedio ?? 0) / 5) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-semibold text-ipn-guinda w-8 text-right">{ev.promedio?.toFixed(1)}</span>
+                        <span className="text-xs text-gray-400">({ev.total_respuestas} resp.)</span>
+                      </div>
+                    ) : null}
+                    {ev.tipo === 'texto' && ev.comentarios ? (
+                      <div className="mt-2 space-y-1">
+                        {ev.comentarios.split('||').filter(Boolean).map((c, i) => (
+                          <p key={i} className="text-xs text-gray-600 bg-white rounded px-3 py-1.5 border border-gray-200">"{c}"</p>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </LargeModal>
+  );
+}
 
 // ─── Create User Modal ────────────────────────────────────────────────────────
 
@@ -291,6 +629,7 @@ export function UsersPage() {
   const [estadoFilter, setEstadoFilter] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [profileUser, setProfileUser] = useState<AdminUser | null>(null);
   const [planes, setPlanes] = useState<PlanOption[]>([]);
   const [departamentos, setDepartamentos] = useState<DepartamentoOption[]>([]);
   const [actionError, setActionError] = useState('');
@@ -444,6 +783,14 @@ export function UsersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1 flex-wrap">
+                        {(u.roles?.includes('alumno') || u.roles?.includes('profesor')) && (
+                          <button
+                            className="px-3 py-1.5 bg-ipn-guinda text-white text-xs rounded hover:bg-ipn-guinda/90 transition-colors"
+                            onClick={() => setProfileUser(u)}
+                          >
+                            Ver perfil
+                          </button>
+                        )}
                         {(isBlocked(u) || isInactive(u)) && (
                           <button className={btnSuccess} onClick={() => handleActivate(u)}>
                             Reactivar
@@ -488,6 +835,13 @@ export function UsersPage() {
           onClose={() => setShowImport(false)}
           onImported={fetchUsers}
         />
+      )}
+
+      {profileUser && profileUser.roles?.includes('alumno') && (
+        <StudentProfileModal user={profileUser} onClose={() => setProfileUser(null)} />
+      )}
+      {profileUser && !profileUser.roles?.includes('alumno') && profileUser.roles?.includes('profesor') && (
+        <ProfessorProfileModal user={profileUser} onClose={() => setProfileUser(null)} />
       )}
     </div>
   );

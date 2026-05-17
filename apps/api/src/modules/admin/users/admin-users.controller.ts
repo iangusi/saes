@@ -62,3 +62,15 @@ export async function activateUser(req: Request, res: Response) {
   await service.activateUser(idUsuario, idAdmin, ip);
   res.json({ success: true, message: 'Usuario reactivado', data: null, errors: [] });
 }
+
+export async function getStudentProfile(req: Request, res: Response) {
+  const idUsuario = parseInt(req.params.id);
+  const data = await service.getStudentProfile(idUsuario);
+  res.json({ success: true, message: 'OK', data, errors: [] });
+}
+
+export async function getProfessorProfile(req: Request, res: Response) {
+  const idUsuario = parseInt(req.params.id);
+  const data = await service.getProfessorProfile(idUsuario);
+  res.json({ success: true, message: 'OK', data, errors: [] });
+}

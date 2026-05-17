@@ -2,15 +2,16 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import * as XLSX from 'xlsx';
 import { AdminUsersRepository } from './admin-users.repository';
+import { StudentsRepository } from '../../students/students.repository';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { AuditService } from '../../audit/audit.service';
 import { ConflictError, NotFoundError, ValidationError } from '../../../common/errors/AppError';
 import { CreateUserDto, ListUsersFilters, ImportResult } from './admin-users.types';
 import { createUserSchema } from './admin-users.schema';
-// AdminUserRow is defined in repository and returned by repo methods
 
 export class AdminUsersService {
   private readonly repo = new AdminUsersRepository();
+  private readonly studentsRepo = new StudentsRepository();
   private readonly notif = new NotificationsService();
   private readonly audit = new AuditService();
 
@@ -160,6 +161,39 @@ export class AdminUsersService {
       ipOrigen: ip,
       metadata: { idUsuario },
     });
+  }
+
+  async getStudentProfile(idUsuario: number) {
+    const profile = await this.repo.getStudentByUserId(idUsuario);
+    if (!profile) throw new NotFoundError('Alumno no encontrado');
+
+    const { id_alumno } = profile as { id_alumno: number };
+    const [kardex, stats, grades, schedule] = await Promise.all([
+      this.studentsRepo.getKardex(id_alumno),
+      this.studentsRepo.getKardexStats(id_alumno),
+      this.studentsRepo.getGrades(id_alumno),
+      this.studentsRepo.getSchedule(id_alumno),
+    ]);
+
+    const creditosCompletados = kardex
+      .filter((r) => r.resultado === 'aprobado')
+      .reduce((sum, r) => sum + (r.creditos ?? 0), 0);
+
+    return { profile, kardex, stats, creditosCompletados, grades, schedule };
+  }
+
+  async getProfessorProfile(idUsuario: number) {
+    const profile = await this.repo.getProfessorByUserId(idUsuario);
+    if (!profile) throw new NotFoundError('Profesor no encontrado');
+
+    const { id_profesor } = profile as { id_profesor: number };
+    const [groups, schedule, evaluations] = await Promise.all([
+      this.repo.getProfessorGroups(id_profesor),
+      this.repo.getProfessorSchedule(id_profesor),
+      this.repo.getProfessorEvaluations(id_profesor),
+    ]);
+
+    return { profile, groups, schedule, evaluations };
   }
 }
 

@@ -10,6 +10,8 @@ import {
   deactivateUser,
   blockUser,
   activateUser,
+  getStudentProfile,
+  getProfessorProfile,
 } from './admin-users.controller';
 
 export const adminUsersRoutes = Router();
@@ -23,6 +25,8 @@ adminUsersRoutes.get('/planes', getPlanes);
 adminUsersRoutes.get('/departamentos', getDepartamentos);
 adminUsersRoutes.post('/', createUser);
 adminUsersRoutes.post('/import', upload.single('archivo'), importUsers);
+adminUsersRoutes.get('/:id/student-profile', getStudentProfile);
+adminUsersRoutes.get('/:id/professor-profile', getProfessorProfile);
 adminUsersRoutes.patch('/:id/deactivate', deactivateUser);
 adminUsersRoutes.patch('/:id/block', blockUser);
 adminUsersRoutes.patch('/:id/activate', activateUser);
