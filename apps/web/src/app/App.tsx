@@ -21,6 +21,7 @@ import { UsersPage } from '../pages/admin/UsersPage';
 import { OfferAdminPage } from '../pages/admin/OfferAdminPage';
 import { ExceptionsPage } from '../pages/admin/ExceptionsPage';
 import { NotificationsPage } from '../pages/admin/NotificationsPage';
+import { ChatbotPage } from '../pages/ChatbotPage';
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/teaching-evaluation" element={<Layout><TeachingEvaluationPage /></Layout>} />
         <Route path="/offer" element={<Layout><OfferPage /></Layout>} />
         <Route path="/documentos" element={<Layout><DocumentosPage /></Layout>} />
+        <Route path="/chatbot" element={<Layout><ChatbotPage /></Layout>} />
       </Route>
 
       {/* Rutas de administrador */}

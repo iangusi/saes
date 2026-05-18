@@ -13,6 +13,7 @@ const navItems = [
   { to: '/teaching-evaluation', label: 'Evaluación Docente' },
   { to: '/offer', label: 'Oferta' },
   { to: '/documentos', label: 'Documentos' },
+  { to: '/chatbot', label: '💬 Chat Bot' },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
