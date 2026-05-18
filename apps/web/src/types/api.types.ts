@@ -81,3 +81,76 @@ export interface OfferGroup {
   profesor: string;
   horarios: Array<{ dia: string; inicio: string; fin: string; aula: string }>;
 }
+
+// ===== TIPOS PARA PROFESOR =====
+
+export interface TeacherProfile {
+  idProfesor: number;
+  numeroEmpleado: string;
+  nombre: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string | null;
+  correo: string;
+  departamento: string;
+  estatus: string;
+}
+
+export interface TeacherGroup {
+  idGrupo: number;
+  claveGrupo: string;
+  nombreMateria: string;
+  creditosMateria: number;
+  cupoMax: number;
+  cupoActual: number;
+  estatus: string;
+  horarios: Array<{
+    dia: string;
+    horaInicio: string;
+    horaFin: string;
+    nombreAula: string;
+    edificio: string | null;
+  }>;
+}
+
+export interface TeacherSchedule {
+  grupos: TeacherGroup[];
+  horarios: Array<{
+    idGrupo: number;
+    claveGrupo: string;
+    nombreMateria: string;
+    diaGrupo: string;
+    horaInicio: string;
+    horaFin: string;
+    nombreAula: string;
+    edificio: string | null;
+  }>;
+}
+
+export interface StudentFromGroup {
+  idAlumno: number;
+  boleta: string;
+  nombre: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string | null;
+  correo: string;
+}
+
+export interface TeacherGradeRecord {
+  idAlumno: number;
+  boleta: string;
+  nombre: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string | null;
+  tipoEvaluacion: string;
+  calificacion: number | null;
+  cerrada: boolean;
+  fechaCaptura: string | null;
+}
+
+export interface TeacherAnnouncement {
+  idAnuncio: number;
+  idGrupo: number;
+  titulo: string;
+  contenido: string;
+  fechaCreacion: string;
+}
