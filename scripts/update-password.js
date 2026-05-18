@@ -12,10 +12,11 @@ async function run() {
   });
 
   /*password123*/
-  await conn.query('UPDATE usuario SET password_hash = ? WHERE identificador = ?', [
+  await conn.query('UPDATE usuario SET password_hash = ? WHERE identificador IN (?, ?)', [
     '$2a$10$CBar31hSxYGe/KB0WiIDmOQ5q8jP.z0BOtxKbKaetyciXrUauBpLG',
-    '2026630151'
-  ]);
+    '2026630151',
+    'EMP025'
+]);
   console.log('Password updated successfully.');
   await conn.end();
 }

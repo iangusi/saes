@@ -19,6 +19,7 @@ import { adminUsersRoutes } from './modules/admin/users/admin-users.routes';
 import { adminOfferRoutes } from './modules/admin/offer/admin-offer.routes';
 import { adminNotificationsRoutes } from './modules/admin/notifications/admin-notifications.routes';
 import { adminExceptionsRoutes } from './modules/admin/exceptions/admin-exceptions.routes';
+import { teachersRoutes } from './modules/teachers/teachers.routes';
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/students', studentsRoutes);
 app.use('/api/students', kardexRoutes);
 app.use('/api/students', scheduleRoutes);
 app.use('/api/students', gradesRoutes);
+app.use('/api/teachers', teachersRoutes);
 app.use('/api/reenrollment', reenrollmentRoutes);
 app.use('/api/withdrawals', withdrawalsRoutes);
 app.use('/api/teaching-evaluation', teachingEvaluationRoutes);

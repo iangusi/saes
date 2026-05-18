@@ -8,7 +8,7 @@ import { useState } from 'react';
 
 function getRedirectPath(roles: string[]): string {
   if (roles.includes('admin')) return '/admin/periods';
-  if (roles.includes('profesor')) return '/dashboard';
+  if (roles.includes('profesor')) return '/teacher/dashboard';
   return '/dashboard';
 }
 
