@@ -1,6 +1,19 @@
 import { useEffect, useState } from 'react';
 import { teachersService } from '../services/teachers.service';
 import { TeacherSchedule, TeacherGroup } from '../types/api.types';
+import { ScheduleBoard } from '../components/ScheduleBoard';
+import { ScheduleSlot } from '../utils/schedule';
+
+const GROUP_COLORS = [
+  'bg-blue-100 border-blue-400 text-blue-800',
+  'bg-green-100 border-green-400 text-green-800',
+  'bg-purple-100 border-purple-400 text-purple-800',
+  'bg-orange-100 border-orange-400 text-orange-800',
+  'bg-teal-100 border-teal-400 text-teal-800',
+  'bg-pink-100 border-pink-400 text-pink-800',
+  'bg-yellow-100 border-yellow-400 text-yellow-800',
+  'bg-indigo-100 border-indigo-400 text-indigo-800',
+];
 
 export function TeacherSchedulePage() {
   const [schedule, setSchedule] = useState<TeacherSchedule | null>(null);
@@ -24,6 +37,19 @@ export function TeacherSchedulePage() {
     loadSchedule();
   }, []);
 
+  const buildSlots = (s: TeacherSchedule): ScheduleSlot[] =>
+    s.horarios.map((h) => {
+      const groupIndex = s.grupos.findIndex((g) => g.claveGrupo === h.claveGrupo);
+      return {
+        day: h.diaGrupo,
+        start: h.horaInicio,
+        end: h.horaFin,
+        materiaName: `${h.claveGrupo} – ${h.nombreMateria}`,
+        room: h.nombreAula + (h.edificio ? ` (${h.edificio})` : ''),
+        color: GROUP_COLORS[groupIndex >= 0 ? groupIndex % GROUP_COLORS.length : 0],
+      };
+    });
+
   if (loading) {
     return <div className="text-center py-8">Cargando horario...</div>;
   }
@@ -38,13 +64,18 @@ export function TeacherSchedulePage() {
     <div>
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Mi Horario</h2>
 
+      {/* Vista semanal tipo tablero */}
+      <div className="mb-8">
+        <ScheduleBoard slots={buildSlots(schedule)} />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Listado de grupos */}
         <div className="lg:col-span-1">
           <div className="bg-white border border-gray-200 rounded-xl p-4">
             <h3 className="font-semibold text-gray-800 mb-4">Mis Grupos ({schedule.grupos.length})</h3>
             <div className="space-y-2">
-              {schedule.grupos.map((grupo) => (
+              {schedule.grupos.map((grupo, idx) => (
                 <button
                   key={grupo.idGrupo}
                   onClick={() => setSelectedGroup(grupo)}
@@ -54,7 +85,12 @@ export function TeacherSchedulePage() {
                       : 'border-gray-200 hover:border-ipn-guinda/50'
                   }`}
                 >
-                  <div className="font-semibold text-sm">{grupo.claveGrupo}</div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-block w-3 h-3 rounded-full border-2 ${GROUP_COLORS[idx % GROUP_COLORS.length]}`}
+                    />
+                    <span className="font-semibold text-sm">{grupo.claveGrupo}</span>
+                  </div>
                   <div className="text-xs text-gray-600 mt-1">{grupo.nombreMateria}</div>
                   <div className="text-xs text-gray-500 mt-1">
                     {grupo.cupoActual}/{grupo.cupoMax} estudiantes
@@ -110,42 +146,6 @@ export function TeacherSchedulePage() {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Tabla de vista semanal */}
-      <div className="mt-8 bg-white border border-gray-200 rounded-xl p-6">
-        <h3 className="font-semibold text-gray-800 mb-4">Vista por Día</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-semibold text-gray-800">Día</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-800">Hora</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-800">Grupo</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-800">Materia</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-800">Aula</th>
-              </tr>
-            </thead>
-            <tbody>
-              {schedule.horarios
-                .sort((a, b) => diasOrden.indexOf(a.diaGrupo) - diasOrden.indexOf(b.diaGrupo))
-                .map((horario, idx) => (
-                  <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 capitalize font-medium text-gray-800">{horario.diaGrupo}</td>
-                    <td className="py-3 px-4 text-gray-600">
-                      {horario.horaInicio} - {horario.horaFin}
-                    </td>
-                    <td className="py-3 px-4 text-gray-800 font-medium">{horario.claveGrupo}</td>
-                    <td className="py-3 px-4 text-gray-600">{horario.nombreMateria}</td>
-                    <td className="py-3 px-4 text-gray-600">
-                      {horario.nombreAula}
-                      {horario.edificio && ` (${horario.edificio})`}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   );

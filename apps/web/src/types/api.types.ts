@@ -73,7 +73,7 @@ export interface GradeRow {
 export interface OfferGroup {
   idGrupo: number;
   claveGrupo: string;
-  materia: { id: number; clave: string; nombre: string; creditos: number };
+  materia: { id: number; clave: string; nombre: string; creditos: number; semestre?: number; carreras?: string[] };
   cupoMax: number;
   cupoActual: number;
   cupoDisponible: number;
@@ -153,4 +153,16 @@ export interface TeacherAnnouncement {
   titulo: string;
   contenido: string;
   fechaCreacion: string;
+}
+
+export interface StudentAnnouncement {
+  idAnuncio: number;
+  idGrupo: number;
+  titulo: string;
+  contenido: string;
+  fechaCreacion: string;
+  nombreMateria: string;
+  claveGrupo: string;
+  nombreProfesor: string;
+  apellidoPaternoProfesor: string;
 }

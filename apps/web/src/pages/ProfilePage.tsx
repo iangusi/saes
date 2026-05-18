@@ -3,8 +3,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { studentsService } from '../services/students.service';
+import { teachersService } from '../services/teachers.service';
+import { useAuthStore } from '../state/auth.store';
 import { api } from '../services/api';
-import { StudentProfile, ApiResponse } from '../types/api.types';
+import { StudentProfile, TeacherProfile, ApiResponse } from '../types/api.types';
 
 const emailSchema = z.object({ correo: z.string().email('Correo inválido') });
 const pwSchema = z.object({
@@ -13,7 +15,11 @@ const pwSchema = z.object({
 });
 
 export function ProfilePage() {
-  const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const user = useAuthStore((s) => s.user);
+  const isProfesor = user?.roles?.includes('profesor') ?? false;
+
+  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
+  const [teacherProfile, setTeacherProfile] = useState<TeacherProfile | null>(null);
   const [emailMsg, setEmailMsg] = useState('');
   const [pwMsg, setPwMsg] = useState('');
 
@@ -21,8 +27,12 @@ export function ProfilePage() {
   const pwForm = useForm({ resolver: zodResolver(pwSchema) });
 
   useEffect(() => {
-    studentsService.getProfile().then(setProfile);
-  }, []);
+    if (isProfesor) {
+      teachersService.getProfile().then(setTeacherProfile).catch(console.error);
+    } else {
+      studentsService.getProfile().then(setStudentProfile).catch(console.error);
+    }
+  }, [isProfesor]);
 
   const onEmailSubmit = async (data: { correo: string }) => {
     setEmailMsg('');
@@ -45,23 +55,37 @@ export function ProfilePage() {
     }
   };
 
-  if (!profile) return <p className="text-gray-500">Cargando...</p>;
+  const loaded = isProfesor ? teacherProfile !== null : studentProfile !== null;
+  if (!loaded) return <p className="text-gray-500">Cargando...</p>;
 
-  const campos = [
-    { label: 'Nombre completo', value: `${profile.nombre} ${profile.apellidoPaterno} ${profile.apellidoMaterno ?? ''}` },
-    { label: 'Boleta', value: profile.boleta },
-    { label: 'Carrera', value: profile.carrera },
-    { label: 'Plan de estudios', value: profile.plan },
-    { label: 'Semestre actual', value: profile.semestre },
-    { label: 'Estatus', value: profile.estatus },
-  ];
+  const campos = isProfesor && teacherProfile
+    ? [
+        { label: 'Nombre completo', value: `${teacherProfile.nombre} ${teacherProfile.apellidoPaterno} ${teacherProfile.apellidoMaterno ?? ''}` },
+        { label: 'Número de empleado', value: teacherProfile.numeroEmpleado },
+        { label: 'Departamento', value: teacherProfile.departamento },
+        { label: 'Estatus', value: teacherProfile.estatus },
+        { label: 'Correo de contacto', value: teacherProfile.correo },
+      ]
+    : studentProfile
+    ? [
+        { label: 'Nombre completo', value: `${studentProfile.nombre} ${studentProfile.apellidoPaterno} ${studentProfile.apellidoMaterno ?? ''}` },
+        { label: 'Boleta', value: studentProfile.boleta },
+        { label: 'Carrera', value: studentProfile.carrera },
+        { label: 'Plan de estudios', value: studentProfile.plan },
+        { label: 'Semestre actual', value: studentProfile.semestre },
+        { label: 'Estatus', value: studentProfile.estatus },
+        { label: 'Correo de contacto', value: studentProfile.correo },
+      ]
+    : [];
 
   return (
     <div className="max-w-3xl space-y-6">
       <h2 className="text-2xl font-bold text-gray-800">Datos Personales</h2>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-700 mb-4">Información académica</h3>
+        <h3 className="font-semibold text-gray-700 mb-4">
+          {isProfesor ? 'Información del profesor' : 'Información académica'}
+        </h3>
         <dl className="grid grid-cols-2 gap-3">
           {campos.map(({ label, value }) => (
             <div key={label}>
@@ -69,10 +93,6 @@ export function ProfilePage() {
               <dd className="text-gray-800 font-medium">{String(value)}</dd>
             </div>
           ))}
-          <div>
-            <dt className="text-xs text-gray-400 uppercase tracking-wide">Correo de contacto</dt>
-            <dd className="text-gray-800 font-medium">{profile.correo}</dd>
-          </div>
         </dl>
       </div>
 

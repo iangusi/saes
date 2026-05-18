@@ -14,6 +14,8 @@ export class OfferService {
         clave: r.clave_materia,
         nombre: r.nombre_materia,
         creditos: r.creditos,
+        semestre: r.semestre ?? undefined,
+        carreras: r.carreras ? r.carreras.split(',') : [],
       },
       cupoMax: r.cupo_max,
       cupoActual: r.cupo_actual,

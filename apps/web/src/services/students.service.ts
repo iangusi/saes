@@ -1,5 +1,5 @@
 import { api } from './api';
-import { ApiResponse, StudentProfile, KardexResponse, ScheduleSlot, GradeRow } from '../types/api.types';
+import { ApiResponse, StudentProfile, KardexResponse, ScheduleSlot, GradeRow, StudentAnnouncement } from '../types/api.types';
 
 export const studentsService = {
   async getProfile() {
@@ -19,6 +19,11 @@ export const studentsService = {
 
   async getGrades() {
     const { data } = await api.get<ApiResponse<GradeRow[]>>('/students/me/grades');
+    return data.data;
+  },
+
+  async getAnnouncements() {
+    const { data } = await api.get<ApiResponse<StudentAnnouncement[]>>('/students/me/announcements');
     return data.data;
   },
 };

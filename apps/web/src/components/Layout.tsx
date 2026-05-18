@@ -13,6 +13,7 @@ const studentNavItems = [
   { to: '/teaching-evaluation', label: 'Evaluación Docente' },
   { to: '/offer', label: 'Oferta' },
   { to: '/documentos', label: 'Documentos' },
+  { to: '/announcements', label: 'Anuncios' },
 ];
 
 const teacherNavItems = [

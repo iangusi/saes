@@ -27,6 +27,7 @@ import { TeacherSchedulePage } from '../pages/TeacherSchedulePage';
 import { TeacherAttendancePage } from '../pages/TeacherAttendancePage';
 import { TeacherGradesPage } from '../pages/TeacherGradesPage';
 import { TeacherAnnouncementsPage } from '../pages/TeacherAnnouncementsPage';
+import { StudentAnnouncementsPage } from '../pages/StudentAnnouncementsPage';
 
 export default function App() {
   return (
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="/teaching-evaluation" element={<Layout><TeachingEvaluationPage /></Layout>} />
         <Route path="/offer" element={<Layout><OfferPage /></Layout>} />
         <Route path="/documentos" element={<Layout><DocumentosPage /></Layout>} />
+        <Route path="/announcements" element={<Layout><StudentAnnouncementsPage /></Layout>} />
 
         {/* Rutas para Profesor */}
         <Route path="/teacher/dashboard" element={<Layout><TeacherDashboardPage /></Layout>} />
