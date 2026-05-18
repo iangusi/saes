@@ -39,7 +39,9 @@ export function SchedulePage() {
 
       <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-3">
         <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">📅 Mi Horario</h3>
-        <ScheduleBoard slots={slots} />
+        <div className="overflow-x-auto">
+          <ScheduleBoard slots={slots} />
+        </div>
         <p className="text-[11px] text-gray-400 italic">
           * Vista semanal (L-V) del horario registrado.
         </p>

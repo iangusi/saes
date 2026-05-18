@@ -69,9 +69,9 @@ export function StudentAnnouncementsPage() {
                 key={announcement.idAnuncio}
                 className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow"
               >
-                <div className="flex items-start justify-between mb-1">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-1 gap-1">
                   <h4 className="text-lg font-semibold text-gray-800">{announcement.titulo}</h4>
-                  <span className="text-xs text-gray-500 whitespace-nowrap ml-4">
+                  <span className="text-xs text-gray-500 sm:whitespace-nowrap sm:ml-4">
                     {new Date(announcement.fechaCreacion).toLocaleDateString('es-MX', {
                       year: 'numeric',
                       month: 'short',

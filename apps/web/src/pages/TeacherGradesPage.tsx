@@ -201,7 +201,7 @@ export function TeacherGradesPage() {
       </div>
 
       {/* Botón de guardar */}
-      <div className="mt-6 flex gap-2">
+      <div className="mt-6 flex flex-wrap gap-2">
         <button
           onClick={handleSaveGrades}
           disabled={saving || editingGrades.size === 0}

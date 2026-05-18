@@ -36,7 +36,7 @@ export function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-8">
         <h1 className="text-xl font-bold text-ipn-guinda mb-4">Nueva contraseña</h1>
 

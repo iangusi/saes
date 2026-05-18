@@ -65,7 +65,7 @@ export function TeacherSchedulePage() {
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Mi Horario</h2>
 
       {/* Vista semanal tipo tablero */}
-      <div className="mb-8">
+      <div className="mb-8 overflow-x-auto">
         <ScheduleBoard slots={buildSlots(schedule)} />
       </div>
 

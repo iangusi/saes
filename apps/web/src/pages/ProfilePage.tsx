@@ -86,7 +86,7 @@ export function ProfilePage() {
         <h3 className="font-semibold text-gray-700 mb-4">
           {isProfesor ? 'Información del profesor' : 'Información académica'}
         </h3>
-        <dl className="grid grid-cols-2 gap-3">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {campos.map(({ label, value }) => (
             <div key={label}>
               <dt className="text-xs text-gray-400 uppercase tracking-wide">{label}</dt>

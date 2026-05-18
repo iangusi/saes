@@ -151,6 +151,7 @@ export function OfferPage() {
 
       {/* Tabla */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
@@ -227,6 +228,7 @@ export function OfferPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       <Modal
@@ -238,7 +240,9 @@ export function OfferPage() {
         {modalSlots.length === 0 ? (
           <p className="text-sm text-gray-500">Sin horarios para este filtro.</p>
         ) : (
-          <ScheduleBoard slots={modalSlots} />
+          <div className="overflow-x-auto">
+            <ScheduleBoard slots={modalSlots} />
+          </div>
         )}
       </Modal>
     </div>

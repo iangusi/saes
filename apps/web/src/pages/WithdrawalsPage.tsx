@@ -89,7 +89,7 @@ export function WithdrawalsPage() {
             {status.inscritas?.map((ins) => (
               <div
                 key={ins.id_inscripcion}
-                className="flex items-center justify-between bg-white border border-gray-200 rounded-xl px-4 py-3"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white border border-gray-200 rounded-xl px-4 py-3 gap-3"
               >
                 <div>
                   <p className="font-semibold text-gray-800">{ins.nombre_materia}</p>

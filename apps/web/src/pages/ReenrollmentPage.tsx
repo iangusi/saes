@@ -195,7 +195,9 @@ export function ReenrollmentPage() {
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             📅 Mi Horario Propuesto
           </h3>
-          <ScheduleBoard slots={selectedSlots} />
+          <div className="overflow-x-auto">
+            <ScheduleBoard slots={selectedSlots} />
+          </div>
           <p className="text-[11px] text-gray-400 italic">
             * El tablero muestra una vista previa de cómo quedarían tus clases seleccionadas.
           </p>
