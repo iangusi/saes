@@ -19,6 +19,7 @@ import { adminUsersRoutes } from './modules/admin/users/admin-users.routes';
 import { adminOfferRoutes } from './modules/admin/offer/admin-offer.routes';
 import { adminNotificationsRoutes } from './modules/admin/notifications/admin-notifications.routes';
 import { adminExceptionsRoutes } from './modules/admin/exceptions/admin-exceptions.routes';
+import { teachersRoutes } from './modules/teachers/teachers.routes';
 import { chatbotRoutes } from './modules/chatbot/chatbot.routes';
 import { teachersRoutes } from './modules/teachers/teachers.routes';
 

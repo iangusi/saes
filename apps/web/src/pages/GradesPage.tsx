@@ -32,7 +32,7 @@ export function GradesPage() {
 
       {Object.entries(porMateria).map(([materia, rows]) => (
         <div key={materia} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-          <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex justify-between">
+          <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between gap-1">
             <span className="font-semibold text-gray-800">{materia}</span>
             <span className="text-sm text-gray-500">
               {rows[0].nombre_profesor} {rows[0].apellido_paterno_profesor} · Grupo{' '}

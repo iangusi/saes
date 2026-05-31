@@ -20,7 +20,7 @@ export function ScheduleBoard({ slots }: ScheduleBoardProps) {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col h-[600px] shadow-sm">
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col h-[600px] shadow-sm min-w-[480px]">
       <div className="grid grid-cols-[60px_repeat(5,1fr)] border-b bg-gray-50">
         <div className="p-2 border-r"></div>
         {DAYS.slice(0, 5).map((day) => (

@@ -81,6 +81,15 @@
 	"revalidacion": "El trámite de revalidación o equivalencia de estudios se inicia en Gestión Escolar, donde se recibe la documentación del aspirante o alumno. El departamento coordina con las Academias y la Dirección de Coordinación competente para determinar qué unidades de aprendizaje son reconocidas.",
 	"vigencia": "Gestión Escolar es la encargada de verificar que el alumno mantenga la calidad de alumno regular (acreditar todas las unidades de aprendizaje cursadas). La pérdida de esta calidad (por reprobar una o más unidades) se notifica al alumno, y puede ser recuperada mediante el proceso de recursamiento o dictamen, de acuerdo a la normatividad vigente."
 },
+	"portal_profesor": {
+		"horario": "Para consultar tu horario como profesor, dirígete a la sección 'Mi Horario' en el menú lateral del portal SAES 2.0. Ahí verás todos tus grupos asignados en el periodo activo, con los días, horas y aulas correspondientes. Puedes seleccionar cada grupo para ver sus detalles.",
+		"asistencia": "Para registrar asistencia, ve a la sección 'Asistencia' en el menú. Selecciona el grupo y la fecha, luego marca a cada alumno como presente, ausente o con falta justificada. Finalmente presiona 'Guardar Asistencia'. Puedes usar los botones 'Marcar Todos Presentes' o 'Marcar Todos Ausentes' para agilizar el proceso.",
+		"calificaciones": "Para capturar calificaciones, ve a la sección 'Calificaciones'. Selecciona el grupo, elige el tipo de evaluación (parcial, final, etc.) e ingresa la calificación de cada alumno en un rango del 0 al 10. La calificación mínima aprobatoria es 6.",
+		"anuncios": "Para publicar un anuncio a tus alumnos, ve a la sección 'Anuncios' en el menú. Selecciona el grupo al que va dirigido, escribe un título y el contenido del aviso, luego presiona 'Publicar Anuncio'. Todos los alumnos inscritos en ese grupo podrán verlo.",
+		"grupos": "Tus grupos asignados aparecen automáticamente en el portal según el periodo académico activo. Si no ves algún grupo, contacta a la Subdirección Académica o a Gestión Escolar para verificar tu asignación.",
+		"perfil": "Puedes consultar tu información personal como número de empleado, departamento y correo en la sección 'Mi Perfil' del portal."
+	},
+	
     "no_entendido": [
         "Lo siento, no entendí tu pregunta. ¿Podrías reformularla?",
         "No estoy seguro de entender. ¿Puedes ser más específico?",

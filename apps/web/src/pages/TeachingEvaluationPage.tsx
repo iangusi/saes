@@ -96,7 +96,7 @@ export function TeachingEvaluationPage() {
 
           {status.inscripciones?.map((ins) => (
             <div key={ins.id_inscripcion} className="bg-white border border-gray-200 rounded-xl p-4">
-              <div className="flex justify-between items-start">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                 <div>
                   <p className="font-semibold text-gray-800">{ins.nombre_materia}</p>
                   <p className="text-sm text-gray-500">

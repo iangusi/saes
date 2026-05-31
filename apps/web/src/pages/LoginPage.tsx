@@ -8,7 +8,7 @@ import { useState } from 'react';
 
 function getRedirectPath(roles: string[]): string {
   if (roles.includes('admin')) return '/admin/periods';
-  if (roles.includes('profesor')) return '/dashboard';
+  if (roles.includes('profesor')) return '/teacher/dashboard';
   return '/dashboard';
 }
 
@@ -44,7 +44,7 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-8">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-ipn-guinda">SAES 2.0</h1>

@@ -2,6 +2,7 @@ import os
 import json
 import random
 import requests
+import base64
 from groq import Groq
 from dotenv import load_dotenv
 
@@ -31,6 +32,23 @@ class ChatbotESCOM:
         self.client = Groq(api_key=api_key)
         return True
 
+    def _obtener_rol(self, token: str) -> str:
+        """Decodifica el JWT y devuelve el rol del usuario."""
+        try:
+            payload_b64 = token.split(".")[1]
+            padding = 4 - len(payload_b64) % 4
+            if padding != 4:
+                payload_b64 += "=" * padding
+            payload = json.loads(base64.b64decode(payload_b64).decode("utf-8"))
+            roles = payload.get("roles", [])
+            if "profesor" in roles:
+                return "profesor"
+            if "alumno" in roles:
+                return "alumno"
+        except Exception as e:
+            print(f"[JWT error] {e}")
+        return "alumno"
+
     def _system_prompt(self) -> str:
         return f"""Eres un asistente virtual académico oficial de ESCOM \
 (Escuela Superior de Cómputo del Instituto Politécnico Nacional).
@@ -41,13 +59,13 @@ Tu única fuente de verdad es la siguiente base de conocimiento institucional en
 
 REGLAS ESTRICTAS:
 1. Responde ÚNICAMENTE sobre los temas cubiertos en ese JSON: reglamento escolar, \
-inscripción, reinscripción, responsabilidades de profesores y gestión escolar.
+inscripción, reinscripción, responsabilidades de profesores, gestión escolar y \
+funciones del portal SAES 2.0.
 2. Si la pregunta está fuera de esos temas (política, matemáticas, tecnología en \
 general, etc.), responde: "Lo siento, solo puedo ayudarte con temas académicos de \
 ESCOM como reglamento, inscripciones, reinscripciones y gestión escolar."
-3. Para datos personales del alumno (calificaciones, horario inscrito, kardex, \
-promedio): indica que puede consultarlos en las secciones del portal SAES. \
-NO inventes datos numéricos.
+3. Para datos personales que NO hayas recibido como contexto, indica que puede \
+consultarlos en las secciones del portal SAES. NO inventes datos numéricos.
 4. Responde siempre en español, de forma clara, amable y profesional.
 5. Si el JSON tiene la información exacta, úsala o parafraséala fielmente.
 6. Sé conciso: respuestas directas, sin relleno innecesario."""
@@ -61,14 +79,16 @@ NO inventes datos numéricos.
             )
             if response.status_code == 200:
                 return response.json()
+            print(f"[Backend {endpoint}] status: {response.status_code}")
             return None
         except Exception as e:
             print(f"[Backend error] {e}")
             return None
 
-    def _responder_datos_reales(self, pregunta_lower: str, token: str) -> str | None:
-        if not token:
-            return None
+    # ------------------------------------------------------------------
+    # CONSULTAS REALES — ALUMNO
+    # ------------------------------------------------------------------
+    def _responder_alumno(self, pregunta_lower: str, token: str) -> str | None:
 
         if "horario" in pregunta_lower:
             data = self._consultar_backend("/api/students/me/schedule", token)
@@ -127,6 +147,103 @@ NO inventes datos numéricos.
 
         return None
 
+    # ------------------------------------------------------------------
+    # CONSULTAS REALES — PROFESOR
+    # ------------------------------------------------------------------
+    def _responder_profesor(self, pregunta_lower: str, token: str) -> str | None:
+
+        # Horario / grupos del profesor
+        if "horario" in pregunta_lower or "grupo" in pregunta_lower or "clase" in pregunta_lower:
+            data = self._consultar_backend("/api/teachers/me/schedule", token)
+            if data and "data" in data:
+                # El endpoint devuelve { grupos: [...], horarios: [...] }
+                grupos = data["data"].get("grupos", [])
+                horarios = data["data"].get("horarios", [])
+
+                if not grupos:
+                    return "No encontré grupos asignados en el periodo activo."
+
+                # Resumen de grupos
+                lines = [f"Tienes {len(grupos)} grupo(s) asignado(s):\n"]
+                for g in grupos:
+                    lines.append(
+                        f"• {g.get('claveGrupo', '')} — {g.get('nombreMateria', '')} "
+                        f"({g.get('cupoActual', 0)}/{g.get('cupoMax', 0)} alumnos)"
+                    )
+
+                # Detalle de sesiones ordenadas
+                if horarios:
+                    dias_orden = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado"]
+                    horarios_sorted = sorted(
+                        horarios,
+                        key=lambda h: (
+                            dias_orden.index(h.get("diaGrupo", "lunes"))
+                            if h.get("diaGrupo") in dias_orden else 9,
+                            h.get("horaInicio", "")
+                        )
+                    )
+                    lines.append("\nSesiones por día:\n")
+                    for h in horarios_sorted:
+                        lines.append(
+                            f"• {h.get('diaGrupo', '').capitalize()} "
+                            f"{h.get('horaInicio', '')} - {h.get('horaFin', '')} | "
+                            f"{h.get('claveGrupo', '')} {h.get('nombreMateria', '')} | "
+                            f"Aula: {h.get('nombreAula', '')}"
+                            + (f" ({h.get('edificio')})" if h.get('edificio') else "")
+                        )
+
+                return "\n".join(lines)
+
+        # Perfil del profesor
+        if "perfil" in pregunta_lower or "mis datos" in pregunta_lower or "mi información" in pregunta_lower:
+            data = self._consultar_backend("/api/teachers/me", token)
+            if data and "data" in data:
+                d = data["data"]
+                return (
+                    f"Tu perfil:\n"
+                    f"• Nombre: {d.get('nombre', '')} {d.get('apellidoPaterno', '')}\n"
+                    f"• Número de empleado: {d.get('numeroEmpleado', '')}\n"
+                    f"• Departamento: {d.get('departamento', '')}\n"
+                    f"• Estatus: {d.get('estatus', '')}"
+                )
+
+        # Alumnos de un grupo — detecta si mencionan "alumnos" + "grupo"
+        if "alumno" in pregunta_lower and ("grupo" in pregunta_lower or "lista" in pregunta_lower):
+            # Primero obtenemos los grupos para saber el id
+            data = self._consultar_backend("/api/teachers/me/schedule", token)
+            if data and "data" in data:
+                grupos = data["data"].get("grupos", [])
+                if not grupos:
+                    return "No tienes grupos asignados en el periodo activo."
+                if len(grupos) == 1:
+                    grupo = grupos[0]
+                    grupo_id = grupo.get("idGrupo")
+                    alumnos_data = self._consultar_backend(
+                        f"/api/teachers/groups/{grupo_id}/students", token
+                    )
+                    if alumnos_data and "data" in alumnos_data:
+                        alumnos = alumnos_data["data"]
+                        if not alumnos:
+                            return f"No hay alumnos inscritos en {grupo.get('claveGrupo')}."
+                        lines = [f"Alumnos en {grupo.get('claveGrupo')} — {grupo.get('nombreMateria')}:\n"]
+                        for a in alumnos:
+                            lines.append(
+                                f"• {a.get('boleta')} — "
+                                f"{a.get('nombre')} {a.get('apellidoPaterno')} {a.get('apellidoMaterno') or ''}"
+                            )
+                        return "\n".join(lines)
+                else:
+                    # Más de un grupo, listar opciones
+                    lines = ["Tienes varios grupos. ¿De cuál quieres ver los alumnos?\n"]
+                    for g in grupos:
+                        lines.append(f"• {g.get('claveGrupo')} — {g.get('nombreMateria')}")
+                    return "\n".join(lines)
+
+        return None
+
+    # ------------------------------------------------------------------
+    # PARSEAR HISTORIAL
+    # ------------------------------------------------------------------
     def _parsear_contexto(self, contexto_previo: str) -> list[dict]:
         if not contexto_previo.strip():
             return []
@@ -144,6 +261,9 @@ NO inventes datos numéricos.
                     mensajes.append({"role": "assistant", "content": contenido})
         return mensajes
 
+    # ------------------------------------------------------------------
+    # RESPUESTA PRINCIPAL
+    # ------------------------------------------------------------------
     def responder(
         self,
         pregunta: str,
@@ -153,11 +273,19 @@ NO inventes datos numéricos.
     ) -> str:
 
         pregunta_lower = pregunta.lower()
+        rol = self._obtener_rol(token) if token else "alumno"
 
-        datos_reales = self._responder_datos_reales(pregunta_lower, token)
-        if datos_reales is not None:
-            return datos_reales
+        # 1. Intentar responder con datos reales de la BD según el rol
+        if token:
+            if rol == "profesor":
+                datos_reales = self._responder_profesor(pregunta_lower, token)
+            else:
+                datos_reales = self._responder_alumno(pregunta_lower, token)
 
+            if datos_reales is not None:
+                return datos_reales
+
+        # 2. Usar el LLM con el dataset como contexto
         if self.model and self.client:
             try:
                 historial = self._parsear_contexto(contexto_previo)
@@ -167,7 +295,7 @@ NO inventes datos numéricos.
 
                 pregunta_final = pregunta
                 if boleta:
-                    pregunta_final = f"[Alumno con boleta {boleta}] {pregunta}"
+                    pregunta_final = f"[{rol.capitalize()} con ID {boleta}] {pregunta}"
 
                 messages.append({"role": "user", "content": pregunta_final})
 
@@ -181,6 +309,7 @@ NO inventes datos numéricos.
             except Exception as e:
                 print(f"[Groq error] {e}")
 
+        # 3. Fallback
         fallback = self.dataset.get(
             "no_entendido",
             ["Lo siento, no pude procesar tu pregunta. Intenta de nuevo."],

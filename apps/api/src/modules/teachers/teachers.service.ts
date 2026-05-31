@@ -20,7 +20,11 @@ export class TeachersService {
     return profile;
   }
 
-  async getSchedule(idProfesor: number): Promise<TeacherSchedule> {
+  // BUG FIX: antes recibía idProfesor directo del token (que es idUsuario).
+  // Ahora resuelve idProfesor correctamente desde idUsuario.
+  async getSchedule(idUsuario: number): Promise<TeacherSchedule> {
+    const idProfesor = await this.repository.getProfesorIdByUsuarioId(idUsuario);
+    if (!idProfesor) throw new Error('No se encontró el profesor');
     return this.repository.getTeacherSchedule(idProfesor);
   }
 
@@ -33,51 +37,43 @@ export class TeachersService {
   }
 
   async recordAttendance(idUsuario: number, dto: RecordAttendanceDto): Promise<void> {
-  // Validar y formatear la fecha
-  if (!dto.fecha) throw new Error('La fecha es requerida');
-  const fechaObj = new Date(dto.fecha);
-  if (isNaN(fechaObj.getTime())) throw new Error('Fecha inválida');
-  const fechaFormateada = fechaObj.toISOString().split('T')[0]; // "YYYY-MM-DD"
+    if (!dto.fecha) throw new Error('La fecha es requerida');
+    const fechaObj = new Date(dto.fecha);
+    if (isNaN(fechaObj.getTime())) throw new Error('Fecha inválida');
+    const fechaFormateada = fechaObj.toISOString().split('T')[0];
 
-  // Validar que haya al menos un registro
-  if (!dto.asistencias || dto.asistencias.length === 0) {
-    throw new Error('Debe registrar asistencia para al menos un alumno');
+    if (!dto.asistencias || dto.asistencias.length === 0) {
+      throw new Error('Debe registrar asistencia para al menos un alumno');
+    }
+
+    await this.repository.recordAttendance(dto.idGrupo, fechaFormateada, dto.asistencias, idUsuario);
   }
 
-  await this.repository.recordAttendance(dto.idGrupo, fechaFormateada, dto.asistencias, idUsuario);
-}
-
-  async updateGrade(dto: UpdateGradeDto): Promise<void> {
-    // Validar rango de calificación
+  async updateGrade(idUsuario: number, dto: UpdateGradeDto): Promise<void> {
     if (dto.calificacion < 0 || dto.calificacion > 10) {
       throw new Error('La calificación debe estar entre 0 y 10');
     }
-
-    await this.repository.updateGrade(dto.idInscripcion, dto.idGrupoEvaluacion, dto.calificacion);
+    // BUG FIX: pasar idUsuario para capturada_por en lugar de hardcodear id_profesor=1
+    await this.repository.updateGrade(dto.idInscripcion, dto.idGrupoEvaluacion, dto.calificacion, idUsuario);
   }
 
   async createAnnouncement(idUsuario: number, dto: CreateAnnouncementDto): Promise<{ id: number }> {
-  // Obtener el id_profesor asociado al id_usuario
-  const profesorId = await this.repository.getProfesorIdByUsuarioId(idUsuario);
-  if (!profesorId) {
-    throw new Error('No se encontró un profesor asociado a este usuario');
+    const profesorId = await this.repository.getProfesorIdByUsuarioId(idUsuario);
+    if (!profesorId) {
+      throw new Error('No se encontró un profesor asociado a este usuario');
+    }
+
+    const grupos = await this.repository.getTeacherGroups(profesorId);
+    if (!grupos.some((g) => g.idGrupo === dto.idGrupo)) {
+      throw new Error('No tiene permiso para crear anuncios en este grupo');
+    }
+
+    if (!dto.titulo?.trim()) throw new Error('El título es requerido');
+    if (!dto.contenido?.trim()) throw new Error('El contenido es requerido');
+
+    const id = await this.repository.createAnnouncement(dto.idGrupo, idUsuario, dto.titulo, dto.contenido);
+    return { id };
   }
-
-  // Validar que el profesor sea dueño del grupo
-  console.log('Profesor ID:', profesorId);
-  const grupos = await this.repository.getTeacherGroups(profesorId);
-  if (!grupos.some((g) => g.idGrupo === dto.idGrupo)) {
-    throw new Error('No tiene permiso para crear anuncios en este grupo');
-  }
-
-  // Validar contenido
-  if (!dto.titulo?.trim()) throw new Error('El título es requerido');
-  if (!dto.contenido?.trim()) throw new Error('El contenido es requerido');
-
-  // Guardar anuncio (el repositorio recibe idUsuario para enviado_por)
-  const id = await this.repository.createAnnouncement(dto.idGrupo, idUsuario, dto.titulo, dto.contenido);
-  return { id };
-}
 
   async getGroupAnnouncements(idGrupo: number): Promise<any[]> {
     return this.repository.getGroupAnnouncements(idGrupo);

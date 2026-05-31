@@ -71,4 +71,22 @@ export class StudentsService {
 
     return this.repo.getGrades(student.id_alumno);
   }
+
+  async getAnnouncements(idUsuario: number) {
+    const student = await this.repo.findByUserId(idUsuario);
+    if (!student) throw new NotFoundError('Alumno no encontrado');
+
+    const rows = await this.repo.getAnnouncements(student.id_alumno);
+    return rows.map((r) => ({
+      idAnuncio: r.id_anuncio,
+      idGrupo: r.id_grupo,
+      titulo: r.titulo,
+      contenido: r.contenido,
+      fechaCreacion: r.fecha_creacion,
+      nombreMateria: r.nombre_materia,
+      claveGrupo: r.clave_grupo,
+      nombreProfesor: r.nombre_profesor,
+      apellidoPaternoProfesor: r.apellido_paterno_profesor,
+    }));
+  }
 }

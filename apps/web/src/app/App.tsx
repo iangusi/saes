@@ -22,6 +22,12 @@ import { UsersPage } from '../pages/admin/UsersPage';
 import { OfferAdminPage } from '../pages/admin/OfferAdminPage';
 import { ExceptionsPage } from '../pages/admin/ExceptionsPage';
 import { NotificationsPage } from '../pages/admin/NotificationsPage';
+import { TeacherDashboardPage } from '../pages/TeacherDashboardPage';
+import { TeacherSchedulePage } from '../pages/TeacherSchedulePage';
+import { TeacherAttendancePage } from '../pages/TeacherAttendancePage';
+import { TeacherGradesPage } from '../pages/TeacherGradesPage';
+import { TeacherAnnouncementsPage } from '../pages/TeacherAnnouncementsPage';
+import { StudentAnnouncementsPage } from '../pages/StudentAnnouncementsPage';
 import { ChatbotPage } from '../pages/ChatbotPage';
 import { TeacherDashboardPage } from '../pages/TeacherDashboardPage';
 import { TeacherSchedulePage } from '../pages/TeacherSchedulePage';
@@ -57,6 +63,25 @@ export default function App() {
         <Route path="/teacher/attendance"   element={<Layout><TeacherAttendancePage /></Layout>} />
         <Route path="/teacher/grades"       element={<Layout><TeacherGradesPage /></Layout>} />
         <Route path="/teacher/announcements" element={<Layout><TeacherAnnouncementsPage /></Layout>} />
+        <Route path="/dashboard" element={<Layout><DashboardPage /></Layout>} />
+        <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
+        <Route path="/kardex" element={<Layout><KardexPage /></Layout>} />
+        <Route path="/schedule" element={<Layout><SchedulePage /></Layout>} />
+        <Route path="/grades" element={<Layout><GradesPage /></Layout>} />
+        <Route path="/reenrollment" element={<Layout><ReenrollmentPage /></Layout>} />
+        <Route path="/withdrawals" element={<Layout><WithdrawalsPage /></Layout>} />
+        <Route path="/teaching-evaluation" element={<Layout><TeachingEvaluationPage /></Layout>} />
+        <Route path="/offer" element={<Layout><OfferPage /></Layout>} />
+        <Route path="/documentos" element={<Layout><DocumentosPage /></Layout>} />
+        <Route path="/announcements" element={<Layout><StudentAnnouncementsPage /></Layout>} />
+
+        {/* Rutas para Profesor */}
+        <Route path="/teacher/dashboard" element={<Layout><TeacherDashboardPage /></Layout>} />
+        <Route path="/teacher/schedule" element={<Layout><TeacherSchedulePage /></Layout>} />
+        <Route path="/teacher/attendance" element={<Layout><TeacherAttendancePage /></Layout>} />
+        <Route path="/teacher/grades" element={<Layout><TeacherGradesPage /></Layout>} />
+        <Route path="/teacher/announcements" element={<Layout><TeacherAnnouncementsPage /></Layout>} />
+        <Route path="/chatbot" element={<Layout><ChatbotPage /></Layout>} />
       </Route>
 
       {/* ── Rutas exclusivas de administrador ── */}
@@ -67,6 +92,7 @@ export default function App() {
         <Route path="/admin/offer"         element={<AdminLayout><OfferAdminPage /></AdminLayout>} />
         <Route path="/admin/notifications" element={<AdminLayout><NotificationsPage /></AdminLayout>} />
         <Route path="/admin/exceptions"    element={<AdminLayout><ExceptionsPage /></AdminLayout>} />
+        <Route path="/admin/exceptions" element={<AdminLayout><ExceptionsPage /></AdminLayout>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />

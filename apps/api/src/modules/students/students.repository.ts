@@ -53,6 +53,18 @@ export interface GradeRow extends RowDataPacket {
   cerrada: number;
 }
 
+export interface AnnouncementRow extends RowDataPacket {
+  id_anuncio: number;
+  id_grupo: number;
+  titulo: string;
+  contenido: string;
+  fecha_creacion: string;
+  nombre_materia: string;
+  clave_grupo: string;
+  nombre_profesor: string;
+  apellido_paterno_profesor: string;
+}
+
 export class StudentsRepository {
   async findByUserId(idUsuario: number): Promise<StudentProfileRow | null> {
     const [rows] = await pool.query<StudentProfileRow[]>(
@@ -145,6 +157,26 @@ export class StudentsRepository {
       promedio: rows[0]?.promedio ?? 0,
       aprobadas: rows[0]?.aprobadas ?? 0,
     };
+  }
+
+  async getAnnouncements(idAlumno: number): Promise<AnnouncementRow[]> {
+    const [rows] = await pool.query<AnnouncementRow[]>(
+      `SELECT a.id_anuncio, a.id_grupo, a.titulo, a.contenido, a.fecha_creacion,
+              m.nombre AS nombre_materia, g.clave_grupo,
+              u.nombre AS nombre_profesor, u.apellido_paterno AS apellido_paterno_profesor
+       FROM inscripcion i
+       JOIN grupo g ON g.id_grupo = i.id_grupo
+       JOIN materia m ON m.id_materia = g.id_materia
+       JOIN periodo_academico pa ON pa.id_periodo = g.id_periodo AND pa.activo = 1
+       JOIN anuncio a ON a.id_grupo = g.id_grupo
+       JOIN profesor p ON p.id_profesor = g.id_profesor
+       JOIN usuario u ON u.id_usuario = p.id_usuario
+       WHERE i.id_alumno = ? AND i.estatus = 'activa'
+       ORDER BY a.fecha_creacion DESC
+       LIMIT 50`,
+      [idAlumno]
+    );
+    return rows;
   }
 
   async getKardexByPeriod(idAlumno: number): Promise<RowDataPacket[]> {

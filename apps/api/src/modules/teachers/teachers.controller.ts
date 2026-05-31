@@ -10,7 +10,6 @@ export async function getTeacherProfile(req: Request, res: Response): Promise<vo
 }
 
 export async function getTeacherSchedule(req: Request, res: Response): Promise<void> {
-  // Obtener idProfesor desde la BD usando idUsuario
   const result = await service.getSchedule(req.user!.sub);
   sendSuccess(res, result);
 }
@@ -29,14 +28,15 @@ export async function getGroupGrades(req: Request, res: Response): Promise<void>
 
 export async function recordAttendance(req: Request, res: Response): Promise<void> {
   const { idGrupo, fecha, asistencias } = req.body;
-  const idUsuario = req.user!.sub; // del token
+  const idUsuario = req.user!.sub;
   await service.recordAttendance(idUsuario, { idGrupo, fecha, asistencias });
   sendSuccess(res, { message: 'Asistencia registrada correctamente' });
 }
 
 export async function updateGrade(req: Request, res: Response): Promise<void> {
   const { idInscripcion, idGrupoEvaluacion, calificacion } = req.body;
-  await service.updateGrade({ idInscripcion, idGrupoEvaluacion, calificacion });
+  // BUG FIX: pasar idUsuario del token para capturada_por
+  await service.updateGrade(req.user!.sub, { idInscripcion, idGrupoEvaluacion, calificacion });
   sendSuccess(res, { message: 'Calificación actualizada correctamente' });
 }
 

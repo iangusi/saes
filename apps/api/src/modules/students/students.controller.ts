@@ -23,3 +23,8 @@ export async function getGrades(req: Request, res: Response): Promise<void> {
   const result = await service.getGrades(req.user!.sub);
   sendSuccess(res, result);
 }
+
+export async function getStudentAnnouncements(req: Request, res: Response): Promise<void> {
+  const result = await service.getAnnouncements(req.user!.sub);
+  sendSuccess(res, result);
+}

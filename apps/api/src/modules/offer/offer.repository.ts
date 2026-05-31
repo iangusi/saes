@@ -15,6 +15,8 @@ export interface OfferRow extends RowDataPacket {
   nombre_profesor: string;
   apellido_paterno_profesor: string;
   horarios: string;
+  semestre: number | null;
+  carreras: string | null;
 }
 
 export class OfferRepository {
@@ -35,10 +37,12 @@ export class OfferRepository {
               (g.cupo_max - g.cupo_actual) AS cupo_disponible, g.estatus AS estatus_grupo,
               u.nombre AS nombre_profesor, u.apellido_paterno AS apellido_paterno_profesor,
               GROUP_CONCAT(
-                CONCAT(hg.dia_semana,'|',TIME_FORMAT(hg.hora_inicio,'%H:%i'),'|',
-                       TIME_FORMAT(hg.hora_fin,'%H:%i'),'|',a.nombre)
+                DISTINCT CONCAT(hg.dia_semana,'|',TIME_FORMAT(hg.hora_inicio,'%H:%i'),'|',
+                       TIME_FORMAT(hg.hora_fin,'%H:%i'),'|',COALESCE(a.nombre,''))
                 ORDER BY hg.dia_semana SEPARATOR ';'
-              ) AS horarios
+              ) AS horarios,
+              MIN(pm.semestre) AS semestre,
+              GROUP_CONCAT(DISTINCT c.clave ORDER BY c.clave SEPARATOR ',') AS carreras
        FROM grupo g
        JOIN materia m ON m.id_materia = g.id_materia
        JOIN profesor p ON p.id_profesor = g.id_profesor
@@ -46,6 +50,9 @@ export class OfferRepository {
        JOIN periodo_academico pa ON pa.id_periodo = g.id_periodo
        LEFT JOIN horario_grupo hg ON hg.id_grupo = g.id_grupo
        LEFT JOIN aula a ON a.id_aula = hg.id_aula
+       LEFT JOIN plan_materia pm ON pm.id_materia = m.id_materia
+       LEFT JOIN plan_estudios pe ON pe.id_plan = pm.id_plan
+       LEFT JOIN carrera c ON c.id_carrera = pe.id_carrera
        WHERE ${periodoCondition}
          AND g.estatus != 'cancelado'
        GROUP BY g.id_grupo

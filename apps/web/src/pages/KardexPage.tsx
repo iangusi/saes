@@ -25,7 +25,7 @@ export function KardexPage() {
       <h2 className="text-2xl font-bold text-gray-800">Kardex Académico</h2>
 
       {/* Resumen */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
           <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Promedio general</p>
           <p className={`text-4xl font-bold ${semaforo(kardex.promedio)}`}>
