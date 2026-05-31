@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../state/auth.store';
 import { authService } from '../services/auth.service';
 
-const navItems = [
+const studentNavItems = [
   { to: '/dashboard', label: 'Inicio' },
   { to: '/profile', label: 'Datos Personales' },
   { to: '/kardex', label: 'Kardex' },
@@ -14,6 +14,15 @@ const navItems = [
   { to: '/offer', label: 'Oferta' },
   { to: '/documentos', label: 'Documentos' },
   { to: '/chatbot', label: '💬 Chat Bot' },
+];
+
+const teacherNavItems = [
+  { to: '/teacher/dashboard', label: 'Inicio' },
+  { to: '/teacher/schedule', label: 'Mi Horario' },
+  { to: '/teacher/attendance', label: 'Asistencia' },
+  { to: '/teacher/grades', label: 'Calificaciones' },
+  { to: '/teacher/announcements', label: 'Anuncios' },
+  { to: '/profile', label: 'Mi Perfil' },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -29,6 +38,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       navigate('/login');
     }
   };
+
+  const isTeacher = user?.roles?.includes('profesor');
+  const navItems = isTeacher ? teacherNavItems : studentNavItems;
 
   return (
     <div className="min-h-screen flex flex-col">
