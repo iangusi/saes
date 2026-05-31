@@ -29,11 +29,6 @@ import { TeacherGradesPage } from '../pages/TeacherGradesPage';
 import { TeacherAnnouncementsPage } from '../pages/TeacherAnnouncementsPage';
 import { StudentAnnouncementsPage } from '../pages/StudentAnnouncementsPage';
 import { ChatbotPage } from '../pages/ChatbotPage';
-import { TeacherDashboardPage } from '../pages/TeacherDashboardPage';
-import { TeacherSchedulePage } from '../pages/TeacherSchedulePage';
-import { TeacherAttendancePage } from '../pages/TeacherAttendancePage';
-import { TeacherGradesPage } from '../pages/TeacherGradesPage';
-import { TeacherAnnouncementsPage } from '../pages/TeacherAnnouncementsPage';
 
 export default function App() {
   return (
