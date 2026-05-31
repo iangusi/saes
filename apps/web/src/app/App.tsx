@@ -28,6 +28,7 @@ import { TeacherAttendancePage } from '../pages/TeacherAttendancePage';
 import { TeacherGradesPage } from '../pages/TeacherGradesPage';
 import { TeacherAnnouncementsPage } from '../pages/TeacherAnnouncementsPage';
 import { StudentAnnouncementsPage } from '../pages/StudentAnnouncementsPage';
+import { ChatbotPage } from '../pages/ChatbotPage';
 
 export default function App() {
   return (
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="/teacher/attendance" element={<Layout><TeacherAttendancePage /></Layout>} />
         <Route path="/teacher/grades" element={<Layout><TeacherGradesPage /></Layout>} />
         <Route path="/teacher/announcements" element={<Layout><TeacherAnnouncementsPage /></Layout>} />
+        <Route path="/chatbot" element={<Layout><ChatbotPage /></Layout>} />
       </Route>
 
       {/* Rutas de administrador */}

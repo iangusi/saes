@@ -24,6 +24,7 @@ const teacherNavItems = [
   { to: '/teacher/grades', label: 'Calificaciones' },
   { to: '/teacher/announcements', label: 'Anuncios' },
   { to: '/profile', label: 'Mi Perfil' },
+  { to: '/chatbot', label: '💬 Chat Bot' },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

@@ -20,6 +20,7 @@ import { adminOfferRoutes } from './modules/admin/offer/admin-offer.routes';
 import { adminNotificationsRoutes } from './modules/admin/notifications/admin-notifications.routes';
 import { adminExceptionsRoutes } from './modules/admin/exceptions/admin-exceptions.routes';
 import { teachersRoutes } from './modules/teachers/teachers.routes';
+import { chatbotRoutes } from './modules/chatbot/chatbot.routes';
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use('/api/admin/users', adminUsersRoutes);
 app.use('/api/admin/offer', adminOfferRoutes);
 app.use('/api/admin/notifications', adminNotificationsRoutes);
 app.use('/api/admin/exceptions', adminExceptionsRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 app.use(errorHandlerMiddleware);
 
