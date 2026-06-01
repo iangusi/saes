@@ -20,13 +20,12 @@ const studentNavItems = [
 
 const teacherNavItems = [
   { to: '/teacher/dashboard', label: 'Inicio' },
+  { to: '/profile', label: 'Mi Perfil' },
   { to: '/teacher/schedule', label: 'Mi Horario' },
   { to: '/teacher/attendance', label: 'Asistencia' },
   { to: '/teacher/grades', label: 'Calificaciones' },
   { to: '/teacher/announcements', label: 'Anuncios' },
-  { to: '/chatbot', label: '💬 Chat Bot' }, 
-  { to: '/profile', label: 'Mi Perfil' },
-  //{ to: '/chatbot', label: 'Chat Bot' },
+  { to: '/chatbot', label: 'Chat Bot' },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
