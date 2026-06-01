@@ -3,7 +3,7 @@ import {
   adminOfferService,
   adminService,
   Carrera, CreateCarreraDto, UpdateCarreraDto,
-  PlanEstudios, PlanDetalle, MateriaEnPlan, CreatePlanDto, UpdatePlanDto, AddMateriaAlPlanDto,
+  PlanEstudios, PlanDetalle, CreatePlanDto, UpdatePlanDto, AddMateriaAlPlanDto,
   Materia, Prerrequisito, CreateMateriaDto, UpdateMateriaDto,
   GrupoAdmin, CreateGrupoDto, UpdateGrupoDto,
   HorarioGrupo, CreateHorarioDto, UpdateHorarioDto,
@@ -58,7 +58,6 @@ const btnPrimary =
   'px-4 py-2 bg-ipn-guinda text-white text-sm font-medium rounded hover:bg-ipn-guinda/90 transition-colors';
 const btnSecondary =
   'px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50 transition-colors';
-const btnDanger = 'px-4 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors';
 const btnSm =
   'px-2 py-1 text-xs border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors';
 const btnSmDanger = 'px-2 py-1 text-xs bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-100 transition-colors';

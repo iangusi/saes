@@ -16,7 +16,7 @@ export class ChatbotController {
   async crearConversacion(req: Request, res: Response) {
     const idUsuario = req.user!.sub as unknown as number;
     const result = await service.crearConversacion(idUsuario);
-    return sendSuccess(res, result, 201);
+    return sendSuccess(res, result, 'Operación exitosa', 201);
   }
 
   // GET /api/chatbot/conversaciones

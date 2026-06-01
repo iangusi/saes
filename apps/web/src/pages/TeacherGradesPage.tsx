@@ -60,7 +60,7 @@ export function TeacherGradesPage() {
     setSaving(true);
     try {
       let saved = 0;
-      for (const [key, value] of editingGrades.entries()) {
+      for (const key of editingGrades.keys()) {
         const [idAlumnoStr, tipoEvaluacion] = key.split('-');
         const idAlumno = parseInt(idAlumnoStr);
 

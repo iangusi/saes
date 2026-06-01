@@ -352,7 +352,7 @@ export class PeriodsService {
       modulo: 'admin/periods',
       descripcion: `Cita manual asignada al alumno ${dto.boleta} en periodo ${period.nombre}`,
       ipOrigen: ip,
-      metadata: { idPeriodo, boleta: dto.boleta, ...dto } as Record<string, unknown>,
+      metadata: { ...dto, idPeriodo, boleta: dto.boleta } as Record<string, unknown>,
     });
 
     this.notif

@@ -14,6 +14,9 @@ const pwSchema = z.object({
   passwordNueva: z.string().min(8).regex(/[A-Z]/).regex(/[0-9]/),
 });
 
+type EmailForm = z.infer<typeof emailSchema>;
+type PasswordForm = z.infer<typeof pwSchema>;
+
 export function ProfilePage() {
   const user = useAuthStore((s) => s.user);
   const isProfesor = user?.roles?.includes('profesor') ?? false;
@@ -23,8 +26,8 @@ export function ProfilePage() {
   const [emailMsg, setEmailMsg] = useState('');
   const [pwMsg, setPwMsg] = useState('');
 
-  const emailForm = useForm({ resolver: zodResolver(emailSchema) });
-  const pwForm = useForm({ resolver: zodResolver(pwSchema) });
+  const emailForm = useForm<EmailForm>({ resolver: zodResolver(emailSchema) });
+  const pwForm = useForm<PasswordForm>({ resolver: zodResolver(pwSchema) });
 
   useEffect(() => {
     if (isProfesor) {
@@ -34,7 +37,7 @@ export function ProfilePage() {
     }
   }, [isProfesor]);
 
-  const onEmailSubmit = async (data: { correo: string }) => {
+  const onEmailSubmit = async (data: EmailForm) => {
     setEmailMsg('');
     try {
       await api.patch<ApiResponse>('/users/me/email', data);
@@ -44,7 +47,7 @@ export function ProfilePage() {
     }
   };
 
-  const onPwSubmit = async (data: { passwordActual: string; passwordNueva: string }) => {
+  const onPwSubmit = async (data: PasswordForm) => {
     setPwMsg('');
     try {
       await api.patch<ApiResponse>('/users/me/password', data);

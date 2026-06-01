@@ -2,11 +2,30 @@
 import { pool } from '../../config/database';
 import { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  AgentTrace,
+  ChatbotResponse,
+  EvidenceItem,
+  PlannerPlan,
+  StructuredData,
+  SuggestedAction,
+  ToolResult,
+} from './chatbot.types';
+
+export interface ChatbotMessageArtifacts {
+  plan?: PlannerPlan;
+  agentTraces?: AgentTrace[];
+  toolResults?: ToolResult[];
+  evidence?: EvidenceItem[];
+}
 
 export interface ConversacionRow extends RowDataPacket {
   id_conversacion: string;
   id_usuario: number;
   titulo: string | null;
+  resumen_contexto: string | null;
+  entidades_json: string | Record<string, unknown> | null;
+  ultimo_intent: string | null;
   creado_en: Date;
   actualizado_en: Date;
 }
@@ -16,6 +35,13 @@ export interface MensajeRow extends RowDataPacket {
   id_conversacion: string;
   rol: 'usuario' | 'asistente' | 'sistema';
   contenido: string;
+  metadata_json: string | Record<string, unknown> | null;
+  data_json: string | StructuredData | null;
+  actions_json: string | SuggestedAction[] | null;
+  plan_json: string | PlannerPlan | null;
+  agent_traces_json: string | AgentTrace[] | null;
+  tool_results_json: string | ToolResult[] | null;
+  evidence_json: string | EvidenceItem[] | null;
   creado_en: Date;
 }
 
@@ -35,7 +61,8 @@ export class ChatbotRepository {
 
   async listarConversaciones(idUsuario: number): Promise<ConversacionRow[]> {
     const [rows] = await pool.query<ConversacionRow[]>(
-      `SELECT id_conversacion, id_usuario, titulo, creado_en, actualizado_en
+      `SELECT id_conversacion, id_usuario, titulo, resumen_contexto,
+              entidades_json, ultimo_intent, creado_en, actualizado_en
        FROM chat_conversacion
        WHERE id_usuario = ?
        ORDER BY actualizado_en DESC`,
@@ -49,7 +76,8 @@ export class ChatbotRepository {
     idUsuario: number
   ): Promise<ConversacionRow | null> {
     const [rows] = await pool.query<ConversacionRow[]>(
-      `SELECT id_conversacion, id_usuario, titulo, creado_en, actualizado_en
+      `SELECT id_conversacion, id_usuario, titulo, resumen_contexto,
+              entidades_json, ultimo_intent, creado_en, actualizado_en
        FROM chat_conversacion
        WHERE id_conversacion = ? AND id_usuario = ?`,
       [idConversacion, idUsuario]
@@ -80,11 +108,37 @@ export class ChatbotRepository {
   async guardarMensaje(
     idConversacion: string,
     rol: 'usuario' | 'asistente' | 'sistema',
-    contenido: string
+    contenido: string,
+    structured?: Partial<ChatbotResponse>,
+    artifacts?: ChatbotMessageArtifacts
   ): Promise<void> {
+    const metadata = structured
+      ? {
+          status: structured.status,
+          intent: structured.intent,
+          confidence: structured.confidence,
+        }
+      : null;
+
     await pool.query(
-      `INSERT INTO chat_mensaje (id_conversacion, rol, contenido) VALUES (?, ?, ?)`,
-      [idConversacion, rol, contenido]
+      `INSERT INTO chat_mensaje
+         (id_conversacion, rol, contenido, metadata_json, data_json, actions_json,
+          plan_json, agent_traces_json, tool_results_json, evidence_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        idConversacion,
+        rol,
+        contenido,
+        metadata ? JSON.stringify(metadata) : null,
+        structured?.data ? JSON.stringify(structured.data) : null,
+        structured?.suggested_actions ? JSON.stringify(structured.suggested_actions) : null,
+        artifacts?.plan ? JSON.stringify(artifacts.plan) : null,
+        artifacts?.agentTraces ? JSON.stringify(artifacts.agentTraces) : null,
+        artifacts?.toolResults ? JSON.stringify(artifacts.toolResults) : null,
+        (artifacts?.evidence ?? structured?.evidence)
+          ? JSON.stringify(artifacts?.evidence ?? structured?.evidence)
+          : null,
+      ]
     );
     // Actualizar timestamp de la conversación
     await pool.query(
@@ -103,7 +157,9 @@ export class ChatbotRepository {
     if (!conv) return [];
 
     const [rows] = await pool.query<MensajeRow[]>(
-      `SELECT id_mensaje, id_conversacion, rol, contenido, creado_en
+      `SELECT id_mensaje, id_conversacion, rol, contenido, creado_en,
+              metadata_json, data_json, actions_json, plan_json,
+              agent_traces_json, tool_results_json, evidence_json
        FROM chat_mensaje
        WHERE id_conversacion = ?
        ORDER BY creado_en ASC
@@ -115,7 +171,9 @@ export class ChatbotRepository {
 
   async obtenerUltimosMensajes(idConversacion: string, n = 6): Promise<MensajeRow[]> {
     const [rows] = await pool.query<MensajeRow[]>(
-      `SELECT id_mensaje, id_conversacion, rol, contenido, creado_en
+      `SELECT id_mensaje, id_conversacion, rol, contenido, creado_en,
+              metadata_json, data_json, actions_json, plan_json,
+              agent_traces_json, tool_results_json, evidence_json
        FROM (
          SELECT * FROM chat_mensaje
          WHERE id_conversacion = ?
@@ -159,5 +217,19 @@ export class ChatbotRepository {
       [idUsuario]
     );
     return rows[0] ?? null;
+  }
+
+  async actualizarContexto(
+    idConversacion: string,
+    resumen: string,
+    entidades: Record<string, unknown>,
+    ultimoIntent: string
+  ): Promise<void> {
+    await pool.query(
+      `UPDATE chat_conversacion
+       SET resumen_contexto = ?, entidades_json = ?, ultimo_intent = ?
+       WHERE id_conversacion = ?`,
+      [resumen, JSON.stringify(entidades), ultimoIntent, idConversacion]
+    );
   }
 }

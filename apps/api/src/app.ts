@@ -21,7 +21,6 @@ import { adminNotificationsRoutes } from './modules/admin/notifications/admin-no
 import { adminExceptionsRoutes } from './modules/admin/exceptions/admin-exceptions.routes';
 import { teachersRoutes } from './modules/teachers/teachers.routes';
 import { chatbotRoutes } from './modules/chatbot/chatbot.routes';
-import { teachersRoutes } from './modules/teachers/teachers.routes';
 
 const app = express();
 
