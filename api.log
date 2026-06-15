@@ -94,3 +94,17 @@ API corriendo en http://localhost:3000
 >>> resultado: [{"id_profesor":1}]
 >>> getTeacherSchedule llamado con idProfesor: 1
 >>> grupos encontrados: [{"idGrupo":1,"claveGrupo":"1CM1","nombreMateria":"Fundamentos de Programación","creditosMateria":7.5,"cupoMax":35,"cupoActual":3,"estatus":"abierto","horarios":[{"dia":"lunes","horaFin":"08:30","edificio":"Unidad A","horaInicio":"07:00","nombreAula":"A-101"},{"dia":"miercoles","horaFin":"08:30","edificio":"Unidad A","horaInicio":"07:00","nombreAula":"A-101"},{"dia":"viernes","horaFin":"08:30","edificio":"Unidad A","horaInicio":"07:00","nombreAula":"A-101"}]},{"idGrupo":19,"claveGrupo":"5CM1","nombreMateria":"Inteligencia Artificial","creditosMateria":7.5,"cupoMax":35,"cupoActual":2,"estatus":"abierto","horarios":[{"dia":"lunes","horaFin":"08:30","edificio":"Unidad B","horaInicio":"07:00","nombreAula":"B-101"},{"dia":"miercoles","horaFin":"08:30","edificio":"Unidad B","horaInicio":"07:00","nombreAula":"B-101"}]}]
+>>> buscando profesor para id_usuario: 2
+>>> resultado: [{"id_profesor":1}]
+>>> getTeacherSchedule llamado con idProfesor: 1
+>>> grupos encontrados: [{"idGrupo":1,"claveGrupo":"1CM1","nombreMateria":"Fundamentos de Programación","creditosMateria":7.5,"cupoMax":35,"cupoActual":3,"estatus":"abierto","horarios":[{"dia":"lunes","horaFin":"08:30","edificio":"Unidad A","horaInicio":"07:00","nombreAula":"A-101"},{"dia":"miercoles","horaFin":"08:30","edificio":"Unidad A","horaInicio":"07:00","nombreAula":"A-101"},{"dia":"viernes","horaFin":"08:30","edificio":"Unidad A","horaInicio":"07:00","nombreAula":"A-101"}]},{"idGrupo":19,"claveGrupo":"5CM1","nombreMateria":"Inteligencia Artificial","creditosMateria":7.5,"cupoMax":35,"cupoActual":2,"estatus":"abierto","horarios":[{"dia":"lunes","horaFin":"08:30","edificio":"Unidad B","horaInicio":"07:00","nombreAula":"B-101"},{"dia":"miercoles","horaFin":"08:30","edificio":"Unidad B","horaInicio":"07:00","nombreAula":"B-101"}]}]
+[INFO] 20:19:30 Restarting: c:\Users\marse\OneDrive\Escritorio\escuela\UNIVERSIDAD\SAES\proyecto saes 2.0\saes\apps\api\src\modules\chatbot\chatbot.intent.ts has been modified
+Conexión a MySQL establecida
+API corriendo en http://localhost:3000
+[INFO] 20:19:41 Restarting: c:\Users\marse\OneDrive\Escritorio\escuela\UNIVERSIDAD\SAES\proyecto saes 2.0\saes\apps\api\src\modules\chatbot\chatbot.intent.ts has been modified
+Conexión a MySQL establecida
+API corriendo en http://localhost:3000
+>>> buscando profesor para id_usuario: 2
+>>> resultado: [{"id_profesor":1}]
+>>> getTeacherSchedule llamado con idProfesor: 1
+>>> grupos encontrados: [{"idGrupo":1,"claveGrupo":"1CM1","nombreMateria":"Fundamentos de Programación","creditosMateria":7.5,"cupoMax":35,"cupoActual":3,"estatus":"abierto","horarios":[{"dia":"lunes","horaFin":"08:30","edificio":"Unidad A","horaInicio":"07:00","nombreAula":"A-101"},{"dia":"miercoles","horaFin":"08:30","edificio":"Unidad A","horaInicio":"07:00","nombreAula":"A-101"},{"dia":"viernes","horaFin":"08:30","edificio":"Unidad A","horaInicio":"07:00","nombreAula":"A-101"}]},{"idGrupo":19,"claveGrupo":"5CM1","nombreMateria":"Inteligencia Artificial","creditosMateria":7.5,"cupoMax":35,"cupoActual":2,"estatus":"abierto","horarios":[{"dia":"lunes","horaFin":"08:30","edificio":"Unidad B","horaInicio":"07:00","nombreAula":"B-101"},{"dia":"miercoles","horaFin":"08:30","edificio":"Unidad B","horaInicio":"07:00","nombreAula":"B-101"}]}]
