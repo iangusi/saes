@@ -239,7 +239,7 @@ INSERT INTO usuario
 VALUES
   (1, 'ADMIN001', 'Administrador', 'Sistema', 'SAES',
    'admin@escom.ipn.mx',
-   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC');
+   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq');
 
 INSERT INTO usuario_rol (id_usuario, id_rol) VALUES (1, 1);
 
@@ -248,26 +248,26 @@ INSERT INTO usuario
   (id_usuario, identificador, nombre, apellido_paterno, apellido_materno,
    correo_contacto, password_hash)
 VALUES
-  (2,  'EMP001', 'Carlos',    'Mendoza',   'Ríos',      'c.mendoza@escom.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (3,  'EMP002', 'Adriana',   'Torres',    'Vega',      'a.torres@escom.ipn.mx',    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (4,  'EMP003', 'Roberto',   'Gutiérrez', 'Salinas',   'r.gutierrez@escom.ipn.mx', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (5,  'EMP004', 'Laura',     'Sánchez',   'Morales',   'l.sanchez@escom.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (6,  'EMP005', 'Jorge',     'Ramírez',   'Castillo',  'j.ramirez@escom.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (7,  'EMP006', 'Sofía',     'López',     'Herrera',   's.lopez@escom.ipn.mx',     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (8,  'EMP007', 'Miguel',    'Flores',    'Jiménez',   'm.flores@escom.ipn.mx',    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (9,  'EMP008', 'Patricia',  'Cruz',      'Medina',    'p.cruz@escom.ipn.mx',      '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (10, 'EMP009', 'Alejandro', 'Vargas',    'Ortega',    'a.vargas@escom.ipn.mx',    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (11, 'EMP010', 'Diana',     'Reyes',     'Peña',      'd.reyes@escom.ipn.mx',     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (12, 'EMP011', 'Fernando',  'Hernández', 'Luna',      'f.hernandez@escom.ipn.mx', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (13, 'EMP012', 'Claudia',   'Moreno',    'Fuentes',   'c.moreno@escom.ipn.mx',    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (14, 'EMP013', 'Ricardo',   'Jiménez',   'Álvarez',   'r.jimenez@escom.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (15, 'EMP014', 'Gabriela',  'Martínez',  'Romero',    'g.martinez@escom.ipn.mx',  '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (16, 'EMP015', 'Eduardo',   'Ruiz',      'Valdez',    'e.ruiz@escom.ipn.mx',      '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (17, 'EMP016', 'Beatriz',   'Aguilar',   'Soto',      'b.aguilar@escom.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (18, 'EMP017', 'Andrés',    'Pedroza',   'Acosta',    'a.pedroza@escom.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (19, 'EMP018', 'Mónica',    'Domínguez', 'Cervantes', 'm.dominguez@escom.ipn.mx', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (20, 'EMP019', 'Guillermo', 'Pacheco',   'Bravo',     'g.pacheco@escom.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (21, 'EMP020', 'Verónica',  'Espinoza',  'Guerrero',  'v.espinoza@escom.ipn.mx',  '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC');
+  (2,  'EMP001', 'Carlos',    'Mendoza',   'Ríos',      'c.mendoza@escom.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (3,  'EMP002', 'Adriana',   'Torres',    'Vega',      'a.torres@escom.ipn.mx',    '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (4,  'EMP003', 'Roberto',   'Gutiérrez', 'Salinas',   'r.gutierrez@escom.ipn.mx', '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (5,  'EMP004', 'Laura',     'Sánchez',   'Morales',   'l.sanchez@escom.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (6,  'EMP005', 'Jorge',     'Ramírez',   'Castillo',  'j.ramirez@escom.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (7,  'EMP006', 'Sofía',     'López',     'Herrera',   's.lopez@escom.ipn.mx',     '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (8,  'EMP007', 'Miguel',    'Flores',    'Jiménez',   'm.flores@escom.ipn.mx',    '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (9,  'EMP008', 'Patricia',  'Cruz',      'Medina',    'p.cruz@escom.ipn.mx',      '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (10, 'EMP009', 'Alejandro', 'Vargas',    'Ortega',    'a.vargas@escom.ipn.mx',    '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (11, 'EMP010', 'Diana',     'Reyes',     'Peña',      'd.reyes@escom.ipn.mx',     '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (12, 'EMP011', 'Fernando',  'Hernández', 'Luna',      'f.hernandez@escom.ipn.mx', '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (13, 'EMP012', 'Claudia',   'Moreno',    'Fuentes',   'c.moreno@escom.ipn.mx',    '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (14, 'EMP013', 'Ricardo',   'Jiménez',   'Álvarez',   'r.jimenez@escom.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (15, 'EMP014', 'Gabriela',  'Martínez',  'Romero',    'g.martinez@escom.ipn.mx',  '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (16, 'EMP015', 'Eduardo',   'Ruiz',      'Valdez',    'e.ruiz@escom.ipn.mx',      '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (17, 'EMP016', 'Beatriz',   'Aguilar',   'Soto',      'b.aguilar@escom.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (18, 'EMP017', 'Andrés',    'Pedroza',   'Acosta',    'a.pedroza@escom.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (19, 'EMP018', 'Mónica',    'Domínguez', 'Cervantes', 'm.dominguez@escom.ipn.mx', '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (20, 'EMP019', 'Guillermo', 'Pacheco',   'Bravo',     'g.pacheco@escom.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (21, 'EMP020', 'Verónica',  'Espinoza',  'Guerrero',  'v.espinoza@escom.ipn.mx',  '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq');
 
 INSERT INTO usuario_rol (id_usuario, id_rol) VALUES
   (2,2),(3,2),(4,2),(5,2),(6,2),(7,2),(8,2),(9,2),(10,2),
@@ -289,32 +289,32 @@ INSERT INTO usuario
    correo_contacto, password_hash)
 VALUES
   -- Semestre 1 (ingreso 2026)
-  (22, '2026630001', 'Emiliano',   'Ortega',    'Núñez',     'e.ortega@alumno.ipn.mx',    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (23, '2026630002', 'Valentina',  'Silva',     'Castro',    'v.silva@alumno.ipn.mx',     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (24, '2026630003', 'Mateo',      'Ramos',     'Ibáñez',    'm.ramos@alumno.ipn.mx',     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (41, '2026630004', 'Fernanda',   'Quiroz',    'Leal',      'f.quiroz@alumno.ipn.mx',    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
+  (22, '2026630001', 'Emiliano',   'Ortega',    'Núñez',     'e.ortega@alumno.ipn.mx',    '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (23, '2026630002', 'Valentina',  'Silva',     'Castro',    'v.silva@alumno.ipn.mx',     '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (24, '2026630003', 'Mateo',      'Ramos',     'Ibáñez',    'm.ramos@alumno.ipn.mx',     '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (41, '2026630004', 'Fernanda',   'Quiroz',    'Leal',      'f.quiroz@alumno.ipn.mx',    '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
   -- Semestre 3 (ingreso 2024)
-  (25, '2024630001', 'Isabella',   'Fuentes',   'Ochoa',     'i.fuentes@alumno.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (26, '2024630002', 'Sebastián',  'Delgado',   'Ríos',      's.delgado@alumno.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (27, '2024630003', 'Camila',     'Estrada',   'Ponce',     'c.estrada@alumno.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (42, '2024630004', 'Tomás',      'Villanueva','Espejo',    't.villanueva@alumno.ipn.mx', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
+  (25, '2024630001', 'Isabella',   'Fuentes',   'Ochoa',     'i.fuentes@alumno.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (26, '2024630002', 'Sebastián',  'Delgado',   'Ríos',      's.delgado@alumno.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (27, '2024630003', 'Camila',     'Estrada',   'Ponce',     'c.estrada@alumno.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (42, '2024630004', 'Tomás',      'Villanueva','Espejo',    't.villanueva@alumno.ipn.mx', '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
   -- Semestre 5 (ingreso 2022)
-  (28, '2022630001', 'Santiago',   'Guerrero',  'Blanco',    'sa.guerrero@alumno.ipn.mx', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (29, '2022630002', 'Lucía',      'Navarro',   'Méndez',    'l.navarro@alumno.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (30, '2022630003', 'Daniel',     'Paredes',   'Acevedo',   'd.paredes@alumno.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (43, '2022630004', 'Regina',     'Solís',     'Barrera',   'r.solis@alumno.ipn.mx',     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
+  (28, '2022630001', 'Santiago',   'Guerrero',  'Blanco',    'sa.guerrero@alumno.ipn.mx', '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (29, '2022630002', 'Lucía',      'Navarro',   'Méndez',    'l.navarro@alumno.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (30, '2022630003', 'Daniel',     'Paredes',   'Acevedo',   'd.paredes@alumno.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (43, '2022630004', 'Regina',     'Solís',     'Barrera',   'r.solis@alumno.ipn.mx',     '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
   -- Semestre 7 (ingreso 2020)
-  (31, '2020630001', 'Valeria',    'Ávila',     'Lozano',    'v.avila@alumno.ipn.mx',     '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (32, '2020630002', 'Nicolás',    'Becerra',   'Trujillo',  'n.becerra@alumno.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (33, '2020630003', 'Mariana',    'Contreras', 'Solis',     'm.contreras@alumno.ipn.mx', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (44, '2020630004', 'Óscar',      'Peñaloza',  'Rangel',    'o.penaloza@alumno.ipn.mx',  '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
+  (31, '2020630001', 'Valeria',    'Ávila',     'Lozano',    'v.avila@alumno.ipn.mx',     '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (32, '2020630002', 'Nicolás',    'Becerra',   'Trujillo',  'n.becerra@alumno.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (33, '2020630003', 'Mariana',    'Contreras', 'Solis',     'm.contreras@alumno.ipn.mx', '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (44, '2020630004', 'Óscar',      'Peñaloza',  'Rangel',    'o.penaloza@alumno.ipn.mx',  '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
   -- Semestre 8 (ingreso 2019)
-  (34, '2019630001', 'Rodrigo',    'Serrano',   'Palacios',  'r.serrano@alumno.ipn.mx',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
-  (35, '2019630002', 'Andrea',     'Molina',    'Ibarra',    'a.molina@alumno.ipn.mx',    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
+  (34, '2019630001', 'Rodrigo',    'Serrano',   'Palacios',  'r.serrano@alumno.ipn.mx',   '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
+  (35, '2019630002', 'Andrea',     'Molina',    'Ibarra',    'a.molina@alumno.ipn.mx',    '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
   -- Alumno con baja temporal (sem 4, ingreso 2021)
-  (36, '2021630001', 'Hugo',       'Vega',      'Castañeda', 'h.vega@alumno.ipn.mx',      '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC'),
+  (36, '2021630001', 'Hugo',       'Vega',      'Castañeda', 'h.vega@alumno.ipn.mx',      '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq'),
   -- Alumno con materias reprobadas (sem 5, ingreso 2022)
-  (37, '2022630005', 'Kevin',      'Orozco',    'Montes',    'k.orozco@alumno.ipn.mx',    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMvL72wFMSr4RMchF9hgD6WQYC');
+  (37, '2022630005', 'Kevin',      'Orozco',    'Montes',    'k.orozco@alumno.ipn.mx',    '$2a$12$BrX6ULYaOERqMLZlHuTgWO/4gT1tVY9MFXqo1vBQCmMncPJLHrivq');
 
 INSERT INTO usuario_rol (id_usuario, id_rol) VALUES
   (22,3),(23,3),(24,3),(25,3),(26,3),(27,3),(28,3),(29,3),(30,3),
@@ -692,7 +692,56 @@ INSERT INTO historial_academico (id_alumno, id_materia, id_periodo, calificacion
   (14,15,7,6.9,'aprobado');
 
 -- ══════════════════════════════════════════════════════════════
--- 10. CITAS DE REINSCRIPCIÓN
+-- 10. PROCESOS ACADÉMICOS Y VENTANAS DE PERIODO
+-- ══════════════════════════════════════════════════════════════
+
+INSERT INTO proceso_academico (id_proceso, nombre, descripcion) VALUES
+  (1, 'Inscripcion inicial',        'Proceso de inscripcion a materias para nuevos alumnos'),
+  (2, 'Reinscripcion',              'Proceso de reinscripcion para alumnos que continuan'),
+  (3, 'Registro de calificaciones', 'Ventana para que profesores capturen calificaciones de parciales y finales'),
+  (4, 'Baja de materias',           'Periodo durante el cual alumnos pueden tramitar bajas de materias inscritas'),
+  (5, 'ETS',                        'Evaluacion a Titulo de Suficiencia'),
+  (6, 'Revision de calificaciones', 'Periodo para solicitar revision de calificacion final');
+
+INSERT INTO periodo_proceso (id_periodo_proceso, id_periodo, id_proceso, fecha_inicio, fecha_fin, activo) VALUES
+  (1,  8, 1, '2026-01-15', '2026-01-25', 0),  -- Inscripcion inicial: cerrado
+  (2,  8, 2, '2026-04-21', '2026-04-30', 0),  -- Reinscripcion: cerrado
+  (3,  8, 3, '2026-05-01', '2026-06-15', 1),  -- Registro de calificaciones: ACTIVO (cierra 15 Jun)
+  (4,  8, 4, '2026-02-01', '2026-02-28', 0),  -- Baja de materias: cerrado
+  (5,  8, 5, '2026-06-10', '2026-06-20', 0),  -- ETS: proximamente
+  (6,  8, 6, '2026-06-09', '2026-06-12', 0);  -- Revision de calificaciones: proximamente
+
+-- ══════════════════════════════════════════════════════════════
+-- 11. CALIFICACIONES DEL PERIODO ACTIVO (2026-1)
+-- Grupo 1  (1CM1, id_profesor=1): inscripciones 1 (Emiliano), 7 (Valentina)
+--   grupo_evaluacion: P1=1, P2=2 (cerrados); Final=3 (abierto)
+-- Grupo 19 (5CM1, id_profesor=1): inscripciones 28 (Santiago), 31 (Lucía)
+--   grupo_evaluacion: P1=55, P2=56 (cerrados); Final=57 (abierto)
+-- capturada_por = id_usuario del profesor (Carlos Mendoza = 2)
+-- ══════════════════════════════════════════════════════════════
+
+INSERT INTO calificacion (id_inscripcion, id_grupo_evaluacion, calificacion, capturada_por, fecha_captura) VALUES
+  -- 1CM1 – Parcial 1 (ge_id=1): Emiliano reprobando, Valentina aprobando
+  (1,  1, 3.5, 2, '2026-03-01 10:00:00'),
+  (7,  1, 8.0, 2, '2026-03-01 10:05:00'),
+  -- 1CM1 – Parcial 2 (ge_id=2): Emiliano sigue reprobando
+  (1,  2, 4.0, 2, '2026-04-19 11:00:00'),
+  (7,  2, 7.5, 2, '2026-04-19 11:05:00'),
+  -- 5CM1 – Parcial 1 (ge_id=55): Santiago al límite, Lucía aprobando
+  (28, 55, 5.0, 2, '2026-03-01 11:00:00'),
+  (31, 55, 7.0, 2, '2026-03-01 11:10:00'),
+  -- 5CM1 – Parcial 2 (ge_id=56): Santiago sigue reprobando
+  (28, 56, 5.5, 2, '2026-04-19 12:00:00'),
+  (31, 56, 8.0, 2, '2026-04-19 12:10:00');
+
+-- Promedio ponderado actual (solo parciales):
+--   Emiliano  (1CM1): (3.5*30 + 4.0*30) / 60 = 3.75  ← REPROBANDO
+--   Valentina (1CM1): (8.0*30 + 7.5*30) / 60 = 7.75  ← aprobando
+--   Santiago  (5CM1): (5.0*30 + 5.5*30) / 60 = 5.25  ← REPROBANDO
+--   Lucía     (5CM1): (7.0*30 + 8.0*30) / 60 = 7.50  ← aprobando
+
+-- ══════════════════════════════════════════════════════════════
+-- 12. CITAS DE REINSCRIPCIÓN
 -- Franja horaria determinada por promedio general:
 --   promedio ≥ 9.0  → franja 07:00 (día -4 antes de apertura)
 --   promedio ≥ 8.0  → franja 09:00 (día -3)

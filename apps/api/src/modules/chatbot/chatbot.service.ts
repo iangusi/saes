@@ -451,6 +451,28 @@ export class ChatbotService {
     };
   }
 
+  private buildRoleContext(roles: string[]): string {
+    if (roles.includes('profesor')) {
+      return (
+        'PROFESOR de ESCOM-IPN. Puede consultar: grupos asignados (clave, cupo, materia), ' +
+        'lista completa de alumnos por grupo, calificaciones de parciales y finales de sus alumnos, ' +
+        'identificar alumnos en riesgo de reprobar calculando promedio ponderado (P1*30%+P2*30%+Final*40%), ' +
+        'su propio horario de clases y perfil. ' +
+        'Puede consultar TODOS sus grupos a la vez sin necesidad de especificar uno. ' +
+        'Acceso a datos de alumnos SOLO de sus grupos asignados en el periodo activo.'
+      );
+    }
+    if (roles.includes('alumno')) {
+      return (
+        'ALUMNO de ESCOM-IPN. Puede consultar: su horario del periodo activo, ' +
+        'calificaciones de parciales del semestre actual, kardex historico con todas sus materias, ' +
+        'promedio academico, estado de cita de reinscripcion, grupos elegibles y tramites de baja. ' +
+        'Acceso EXCLUSIVO a su propia informacion academica.'
+      );
+    }
+    return 'Usuario de ESCOM-IPN sin rol especifico.';
+  }
+
   private buildContextCapsule(
     question: string,
     roles: string[],
@@ -465,6 +487,7 @@ export class ChatbotService {
     return {
       question,
       roles,
+      role_context: this.buildRoleContext(roles),
       user_context: {
         id_usuario: idUsuario,
         authenticated_identifier: null,
@@ -717,12 +740,22 @@ function suggestedActionsForIntent(intent: string): SuggestedAction[] {
 function inferToolName(question: string, intent: string, roles: string[]): string | null {
   const text = `${question} ${normalizeForMatch(intent)}`;
   const isTeacher = roles.includes('profesor');
+
   if (looksLikeScheduleLookup(text)) return isTeacher ? 'teacher.schedule' : 'student.schedule';
+
+  // Intents de calificaciones/reprobados: dejar al database agent decidir (SQL o herramienta)
+  if (intent === 'consulta_alumnos_reprobados' || intent === 'consulta_calificaciones_grupo') return null;
+
+  // Verificar keywords de reprobados/calificaciones ANTES del match generico de 'alumno'
+  if (isTeacher && /reproband|reprobad|reprobar|reprueba|vanmal|calificacionbaja|bajopromedio/.test(text)) {
+    return null;
+  }
+
   if (isTeacher && text.includes('alumno')) return 'teacher.group_students';
   if (isTeacher && text.includes('grupo')) return 'teacher.groups';
   if (isTeacher && text.includes('horario')) return 'teacher.schedule';
   if (text.includes('kardex') || text.includes('historial')) return 'student.kardex';
-  if (text.includes('calificacion') || text.includes('parcial')) return 'student.grades';
+  if (text.includes('calificacion') || text.includes('parcial')) return isTeacher ? null : 'student.grades';
   if (text.includes('promedio') || text.includes('avance')) return 'student.kardex';
   if (text.includes('reinscripcion') || text.includes('materiaspuedometer')) return 'student.reenrollment_eligibility';
   if (text.includes('cita')) return 'student.reenrollment_status';

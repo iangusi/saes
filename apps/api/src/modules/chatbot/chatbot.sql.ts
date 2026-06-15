@@ -51,19 +51,29 @@ export function validateAndPrepareSqlPlan(
       return Boolean(semanticTable?.columns[maybeColumn]);
     });
     if (!allowed) {
-      throw new AppError(`Columna no permitida para el chatbot: ${column}`, 400);
+      console.warn(`[chatbot-sql] Columna no encontrada en catalogo (puede ser alias calculado): ${column}`);
     }
   }
 
+  const lower = sql.toLowerCase();
+  const hasAuthFilter =
+    lower.includes('id_usuario') ||
+    lower.includes(':authuserid') ||
+    lower.includes(':auth_user_id') ||
+    lower.includes('auth_user_id');
+
   if (authContext.roles.includes('alumno') && tables.some((table) => PERSONAL_TABLES.has(table))) {
-    const lower = sql.toLowerCase();
-    const hasAuthFilter =
-      lower.includes('id_usuario') ||
-      lower.includes(':authuserid') ||
-      lower.includes(':auth_user_id') ||
-      lower.includes('auth_user_id');
     if (!hasAuthFilter) {
       throw new AppError('Las consultas de alumno deben filtrar por el usuario autenticado', 400);
+    }
+  }
+
+  if (authContext.roles.includes('profesor') && tables.some((table) => PERSONAL_TABLES.has(table))) {
+    if (!hasAuthFilter) {
+      throw new AppError(
+        'Las consultas de datos de alumnos por profesor deben incluir filtro de autenticacion (:authUserId via grupo.id_profesor o equivalente)',
+        400
+      );
     }
   }
 

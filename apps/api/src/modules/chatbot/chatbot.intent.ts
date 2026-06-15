@@ -77,7 +77,7 @@ const INTENT_KEYWORDS: Array<{
   },
   {
     intent: 'consulta_grupos_profesor',
-    keywords: ['mis grupos', 'grupos asignados', 'grupo asignado', 'cupo'],
+    keywords: ['mis grupos', 'grupos asignados', 'grupo asignado', 'cupo', 'materias asignadas'],
     roles: ['profesor'],
     requiresDatabase: true,
     requiresDataset: false,
@@ -85,6 +85,20 @@ const INTENT_KEYWORDS: Array<{
   {
     intent: 'lista_alumnos_grupo',
     keywords: ['alumnos', 'lista', 'inscritos', 'estudiantes'],
+    roles: ['profesor'],
+    requiresDatabase: true,
+    requiresDataset: false,
+  },
+  {
+    intent: 'consulta_alumnos_reprobados',
+    keywords: ['reprobando', 'reprobados', 'reprobar', 'reprueba', 'van mal', 'calificacion baja', 'calificaciones bajas', 'bajo promedio'],
+    roles: ['profesor'],
+    requiresDatabase: true,
+    requiresDataset: false,
+  },
+  {
+    intent: 'consulta_calificaciones_grupo',
+    keywords: ['calificaciones del grupo', 'calificaciones de mis alumnos', 'notas del grupo', 'como van mis alumnos'],
     roles: ['profesor'],
     requiresDatabase: true,
     requiresDataset: false,
@@ -121,6 +135,15 @@ export function classifyIntentLocally(
   const isStudent = roles.includes('alumno');
 
   if (!normalized) return ambiguous('¿Qué necesitas consultar en SAES?');
+
+  const DEADLINE_PATTERNS = [
+    'ultimo dia', 'fecha limite', 'hasta cuando', 'plazo', 'cuando puedo registrar',
+    'registrar calificacion', 'fecha de cierre', 'cuando cierra', 'se puede registrar',
+    'cuando termina', 'cuándo termina', 'hasta cuándo',
+  ];
+  if (DEADLINE_PATTERNS.some((p) => normalized.includes(normalize(p)))) {
+    return buildResult('institucional_general', 0.85, roles);
+  }
 
   if (OUT_OF_SCOPE_KEYWORDS.some((word) => normalized.includes(word))) {
     return {
@@ -192,6 +215,8 @@ export function normalizeIntentResult(raw: Partial<IntentResult> | null | undefi
     'consulta_horario_profesor',
     'consulta_grupos_profesor',
     'lista_alumnos_grupo',
+    'consulta_alumnos_reprobados',
+    'consulta_calificaciones_grupo',
     'institucional_general',
     'ambigua',
     'fuera_de_alcance',
@@ -237,9 +262,19 @@ function ambiguous(question: string): IntentResult {
   };
 }
 
+const TEACHER_GROUP_INTENTS = new Set<ChatbotIntent>([
+  'lista_alumnos_grupo',
+  'consulta_alumnos_reprobados',
+  'consulta_calificaciones_grupo',
+]);
+
 function resolveFollowUpIntent(question: string, previousIntent: string): ChatbotIntent | null {
   if (question.includes('baja') || question.includes('quitar') || question.includes('retirar')) {
     return 'baja_materias';
+  }
+  // Clave de grupo como respuesta a una aclaración de intent de profesor
+  if (/\b\d[A-Z]{2}\d\b/i.test(question) && TEACHER_GROUP_INTENTS.has(previousIntent as ChatbotIntent)) {
+    return previousIntent as ChatbotIntent;
   }
   if (previousIntent === 'consulta_horario' || previousIntent === 'consulta_kardex') {
     return previousIntent;
@@ -249,7 +284,8 @@ function resolveFollowUpIntent(question: string, previousIntent: string): Chatbo
 }
 
 function looksLikeFollowUp(question: string): boolean {
-  return /\b(esa|ese|eso|esta|este|esas|esos|tambien|también|y|entonces)\b/.test(question);
+  return /\b(esa|ese|eso|esta|este|esas|esos|tambien|también|y|entonces)\b/.test(question)
+    || /\b\d[A-Z]{2}\d\b/i.test(question);
 }
 
 function looksLikeScheduleLookup(question: string): boolean {
@@ -273,6 +309,8 @@ function inferTarget(intent: ChatbotIntent, roles: string[]): string {
     consulta_horario_profesor: 'teacher_schedule',
     consulta_grupos_profesor: 'teacher_groups',
     lista_alumnos_grupo: 'teacher_group_students',
+    consulta_alumnos_reprobados: 'teacher_failing_students',
+    consulta_calificaciones_grupo: 'teacher_group_grades',
     institucional_general: 'institutional_knowledge',
     ambigua: 'clarification',
     fuera_de_alcance: 'out_of_scope',

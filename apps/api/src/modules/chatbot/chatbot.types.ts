@@ -12,6 +12,8 @@ export type ChatbotIntent =
   | 'consulta_horario_profesor'
   | 'consulta_grupos_profesor'
   | 'lista_alumnos_grupo'
+  | 'consulta_alumnos_reprobados'
+  | 'consulta_calificaciones_grupo'
   | 'institucional_general'
   | 'ambigua'
   | 'fuera_de_alcance';
@@ -60,6 +62,7 @@ export interface ChatMessageHistoryItem {
 export interface ContextCapsule {
   question: string;
   roles: string[];
+  role_context: string;
   user_context: {
     id_usuario: number;
     authenticated_identifier?: string | null;

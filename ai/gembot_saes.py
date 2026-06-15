@@ -49,6 +49,8 @@ INTENTS = {
     "consulta_horario_profesor",
     "consulta_grupos_profesor",
     "lista_alumnos_grupo",
+    "consulta_alumnos_reprobados",
+    "consulta_calificaciones_grupo",
     "institucional_general",
     "ambigua",
     "fuera_de_alcance",
@@ -134,14 +136,38 @@ class ChatbotESCOM:
             return local
 
         try:
+            rol_texto = "PROFESOR" if "profesor" in roles else "ALUMNO" if "alumno" in roles else "USUARIO"
             messages = [
                 {
                     "role": "system",
                     "content": (
-                        "Clasifica preguntas del portal SAES 2.0. Responde solo JSON valido con: "
-                        "intent, confidence, requires_database, requires_dataset, requires_clarification, "
-                        "missing_fields, target, clarifying_question. Intents permitidos: "
-                        f"{', '.join(sorted(INTENTS))}."
+                        f"Clasifica preguntas del portal SAES 2.0 de ESCOM-IPN. "
+                        f"El usuario tiene el rol: {rol_texto}.\n\n"
+                        "INTENTS DISPONIBLES Y SU SIGNIFICADO:\n"
+                        "- consulta_horario: alumno quiere ver su propio horario de clases\n"
+                        "- consulta_kardex: alumno quiere ver su historial academico con materias cursadas y resultados\n"
+                        "- consulta_calificaciones: alumno quiere ver sus calificaciones del periodo actual\n"
+                        "- consulta_promedio: alumno quiere saber su promedio o avance de creditos\n"
+                        "- estado_reinscripcion: alumno quiere saber su cita o si puede reinscribirse\n"
+                        "- recomendacion_reinscripcion: alumno quiere saber que materias puede inscribir\n"
+                        "- baja_materias: alumno quiere tramitar una baja de materia\n"
+                        "- consulta_perfil: cualquier rol quiere ver su informacion de perfil\n"
+                        "- consulta_horario_profesor: profesor quiere ver su propio horario de grupos\n"
+                        "- consulta_grupos_profesor: profesor quiere ver sus grupos asignados y cupo\n"
+                        "- lista_alumnos_grupo: profesor quiere ver la lista completa de alumnos de un grupo\n"
+                        "- consulta_alumnos_reprobados: profesor quiere saber que alumnos van reprobando "
+                        "(promedio ponderado < 6.0) en uno o todos sus grupos\n"
+                        "- consulta_calificaciones_grupo: profesor quiere ver las calificaciones de todos "
+                        "sus alumnos en un grupo especifico\n"
+                        "- institucional_general: preguntas sobre reglamento, ETS, tramites, normativa\n"
+                        "- ambigua: pregunta no es clara o necesita mas contexto\n"
+                        "- fuera_de_alcance: temas sin relacion con ESCOM/SAES\n\n"
+                        "REGLAS DE ROL:\n"
+                        "- PROFESOR: puede preguntar sobre sus grupos, alumnos, calificaciones, reprobados, horario\n"
+                        "- ALUMNO: solo puede preguntar sobre su propia informacion academica\n\n"
+                        "Responde solo JSON valido con: intent, confidence, requires_database, requires_dataset, "
+                        "requires_clarification, missing_fields, target, clarifying_question. "
+                        f"Intents validos: {', '.join(sorted(INTENTS))}."
                     ),
                 },
                 {
@@ -160,7 +186,7 @@ class ChatbotESCOM:
             response = self.client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=messages,
-                max_tokens=220,
+                max_tokens=380,
                 temperature=0,
                 response_format={"type": "json_object"},
             )
@@ -201,9 +227,26 @@ class ChatbotESCOM:
             return result(intent, 0.88, True, False, infer_target(intent, is_teacher))
 
         previous_intent = str(contexto.get("previousIntent") or contexto.get("previous_intent") or "")
+
+        # Clave de grupo sola como follow-up (ej: "1CM1" tras pedir aclaración de grupo)
+        TEACHER_DB_INTENTS = {"lista_alumnos_grupo", "consulta_calificaciones_grupo", "consulta_alumnos_reprobados"}
+        if extract_group_key(pregunta) and previous_intent in TEACHER_DB_INTENTS:
+            return result(previous_intent, 0.82, True, False, infer_target(previous_intent, is_teacher))
+
         if previous_intent and any(word in q for word in ["esa", "ese", "eso", "baja", "quitar"]):
             if "baja" in q or "quitar" in q:
                 return result("baja_materias", 0.76, True, True, "withdrawals_status")
+
+        # Detectar preguntas sobre plazos o fechas límite → institucional_general
+        # (deben evaluarse ANTES del loop de keywords para evitar match con "calificaciones")
+        DEADLINE_PATTERNS = [
+            "ultimo dia", "fecha limite", "hasta cuando", "hasta cuándo", "plazo",
+            "cuando puedo registrar", "cuando termina", "cuándo termina",
+            "cuando cierra", "cuándo cierra", "fecha de cierre", "se puede registrar",
+            "registrar calificacion", "puedo registrar",
+        ]
+        if any(phrase in q for phrase in DEADLINE_PATTERNS):
+            return result("institucional_general", 0.84, False, True, "institutional_knowledge")
 
         checks = [
             ("consulta_promedio", ["promedio", "avance"], True, False),
@@ -213,20 +256,29 @@ class ChatbotESCOM:
             ("recomendacion_reinscripcion", ["materias puedo meter", "materias puedo inscribir", "recomienda"], True, True),
             ("baja_materias", ["baja", "dar de baja", "quitar materia"], True, True),
             ("consulta_perfil", ["perfil", "mis datos", "mi informacion", "correo", "boleta", "numero de empleado"], True, False),
+            # Intents de profesor: reprobados y calificaciones ANTES de lista genérica de alumnos
+            ("consulta_alumnos_reprobados", ["reprobando", "reprobados", "reprobar", "reprueba", "van mal", "calificacion baja", "calificaciones bajas", "bajo promedio"], True, False),
+            ("consulta_calificaciones_grupo", ["calificaciones del grupo", "calificaciones de mis alumnos", "notas del grupo", "como van mis alumnos"], True, False),
             ("lista_alumnos_grupo", ["alumnos", "lista", "inscritos"], True, False),
-            ("consulta_grupos_profesor", ["mis grupos", "grupos asignados", "cupo"], True, False),
+            ("consulta_grupos_profesor", ["mis grupos", "grupos asignados", "cupo", "materias asignadas"], True, False),
             ("institucional_general", ["reglamento", "ets", "dictamen", "requisitos", "gestion escolar", "reinscribirme", "reinscribir", "inscribirme", "extraordinaria", "extraordinario", "saberes previos"], False, True),
         ]
 
         for intent, words, requires_db, requires_dataset in checks:
             if any(word in q for word in words):
-                if intent in {"consulta_grupos_profesor", "lista_alumnos_grupo"} and not is_teacher:
+                if intent in {"consulta_grupos_profesor", "lista_alumnos_grupo", "consulta_alumnos_reprobados", "consulta_calificaciones_grupo"} and not is_teacher:
                     continue
+                if intent == "consulta_calificaciones" and is_teacher:
+                    continue  # Profesores usan consulta_calificaciones_grupo, no el intent de alumno
                 return result(intent, 0.82, requires_db, requires_dataset, infer_target(intent, is_teacher))
 
         if "horario" in q or "clase" in q:
             intent = "consulta_horario_profesor" if is_teacher else "consulta_horario"
             return result(intent, 0.84, True, False, infer_target(intent, is_teacher))
+
+        # Fallback para profesores: preguntas sobre grupos sin keyword exacta (ej: "que grupos tengo")
+        if is_teacher and any(kw in q for kw in ["grupos", "materias tengo", "materias que tengo"]):
+            return result("consulta_grupos_profesor", 0.75, True, False, "teacher_groups")
 
         return result("institucional_general", 0.52, False, True, "institutional_knowledge")
 
@@ -257,22 +309,38 @@ class ChatbotESCOM:
             return fallback
 
         try:
+            role_context = str(capsule.get("role_context", ""))
+            catalogs = safe_dict(capsule.get("catalogs", {}))
+            tools = safe_list(catalogs.get("tools", []))
+            tool_names = [t.get("name") for t in tools if isinstance(t, dict) and t.get("name")]
             messages = [
                 {
                     "role": "system",
                     "content": (
                         "Eres PlannerAgent para el chatbot academico de SAES 2.0 en ESCOM. "
                         "Decide que agentes ejecutar segun la pregunta. Devuelve SOLO JSON valido.\n\n"
-                        "REGLAS DE DECISION:\n"
-                        "1. SALUDO/DESPEDIDA/CASUAL (hola, gracias, adios, como estas, buenas, etc.): "
-                        "intent='saludo' o 'fuera_de_alcance', agents=[responder]. Sin database ni regulation.\n"
-                        "2. DATOS PERSONALES (horario, calificaciones, kardex, promedio, perfil, grupos, reinscripcion, bajas): "
-                        "agents=[database, responder]. Usa el intent especifico.\n"
-                        "3. TRAMITES/REGLAMENTO (que es un ETS, dictamen, requisitos, normativa, fechas, reglamento): "
-                        "agents=[regulation, responder]. intent='institucional_general'.\n"
-                        "4. COMBINADO (bajas con reglas, reinscripcion con elegibilidad y normativa): "
-                        "agents=[database, regulation, responder].\n"
-                        "5. AMBIGUO o referencia no resuelta: needs_clarification=true, solo responder.\n\n"
+                        f"CONTEXTO DEL USUARIO: {role_context}\n\n"
+                        "AGENTES DISPONIBLES Y SUS CAPACIDADES:\n"
+                        "- database: Obtiene datos de la base de datos. Puede usar herramientas pre-construidas "
+                        f"({', '.join(tool_names) if tool_names else 'ver catalogo'}) "
+                        "O escribir SQL SELECT validado para consultas especificas como calcular promedios, "
+                        "identificar alumnos reprobados, o combinar tablas. "
+                        "Usar cuando el usuario pide datos dinamicos de su cuenta o grupos.\n"
+                        "- regulation: Busca informacion en documentos institucionales (reglamento, ETS, "
+                        "tramites, fechas academicas, normativa). Usar cuando el usuario pregunta sobre "
+                        "procedimientos o reglas institucionales.\n"
+                        "- responder: Sintetiza todos los datos y evidencia para generar la respuesta final. "
+                        "Siempre debe estar en el plan.\n\n"
+                        "REGLAS DE PLANEACION:\n"
+                        "1. SALUDO/DESPEDIDA/CASUAL: intent='saludo' o 'fuera_de_alcance', agents=[responder].\n"
+                        "2. DATOS DE BD (horario, calificaciones, grupos, alumnos, reprobados, perfil, kardex, bajas): "
+                        "agents=[database, responder].\n"
+                        "3. NORMATIVA (ETS, dictamen, tramites, reglamento, fechas): agents=[regulation, responder].\n"
+                        "4. COMBINADO (tramites con requisitos BD + normativa): agents=[database, regulation, responder].\n"
+                        "5. PROFESORES consultando calificaciones o alumnos reprobados de TODOS sus grupos: "
+                        "agents=[database, responder] SIN needs_clarification — el agente database puede "
+                        "agregar datos de todos los grupos via SQL.\n"
+                        "6. AMBIGUO o referencia no resuelta: needs_clarification=true, agents=[responder].\n\n"
                         "Campos requeridos: intent, confidence, needs_clarification, clarification_question, "
                         "required_context, agents, safety_flags, response_strategy. "
                         f"Intents validos: {', '.join(sorted(INTENTS))}. "
@@ -320,17 +388,61 @@ class ChatbotESCOM:
             return fallback
 
         try:
+            role_context = str(context.get("role_context", ""))
+            is_teacher = "profesor" in roles
+
+            sql_guidance = (
+                "\n\nGUIA SQL PARA PROFESOR:\n"
+                "Cuando el profesor pregunta por calificaciones o alumnos reprobados, escribe SQL como:\n"
+                "SELECT u.nombre, u.apellido_paterno, a.boleta, g.clave_grupo,\n"
+                "  ROUND(SUM(c.calificacion * te.ponderacion / 100.0) / "
+                "NULLIF(SUM(te.ponderacion / 100.0), 0), 2) AS promedio\n"
+                "FROM inscripcion i\n"
+                "JOIN alumno a ON i.id_alumno = a.id_alumno\n"
+                "JOIN usuario u ON a.id_usuario = u.id_usuario\n"
+                "JOIN grupo g ON i.id_grupo = g.id_grupo\n"
+                "JOIN grupo_evaluacion ge ON i.id_grupo = ge.id_grupo\n"
+                "JOIN tipo_evaluacion te ON ge.id_tipo_evaluacion = te.id_tipo_evaluacion\n"
+                "JOIN calificacion c ON i.id_inscripcion = c.id_inscripcion "
+                "AND c.id_grupo_evaluacion = ge.id_grupo_evaluacion\n"
+                "WHERE g.id_profesor = (SELECT id_profesor FROM profesor WHERE id_usuario = :authUserId)\n"
+                "AND (SELECT activo FROM periodo_academico WHERE id_periodo = g.id_periodo) = 1\n"
+                "AND i.estatus = 'activa'\n"
+                "GROUP BY a.id_alumno, a.boleta, u.nombre, u.apellido_paterno, g.clave_grupo\n"
+                "HAVING promedio < 6.0 ORDER BY promedio ASC LIMIT 100\n"
+                "Para un grupo especifico agrega: AND g.clave_grupo = 'CLAVE'.\n"
+                "SEGURIDAD: el filtro g.id_profesor = (SELECT id_profesor FROM profesor WHERE id_usuario = :authUserId) "
+                "es OBLIGATORIO cuando se consultan datos de alumnos.\n"
+            ) if is_teacher else (
+                "\n\nGUIA SQL PARA ALUMNO:\n"
+                "Filtrar SIEMPRE por el alumno autenticado: "
+                "WHERE a.id_usuario = :authUserId o equivalente via JOIN.\n"
+            )
+
             messages = [
                 {
                     "role": "system",
                     "content": (
-                        "Eres DatabaseAgent para SAES. Devuelve solo JSON. Decide si usar una herramienta "
-                        "existente o SQL SELECT validado. Formatos validos: "
-                        "{type:'tool', tool_name, args, purpose, expected_result}, "
-                        "{type:'sql', sql, params, tables, columns, purpose, expected_result}, "
-                        "o {type:'none', reason}. Prefiere herramientas. Si usas SQL, debe ser SELECT, "
-                        "sin comentarios ni punto y coma, con tablas/columnas declaradas y filtro por "
-                        "usuario autenticado cuando haya datos personales usando :authUserId."
+                        f"Eres DatabaseAgent para SAES 2.0. Rol del usuario: {'PROFESOR' if is_teacher else 'ALUMNO'}.\n"
+                        f"Contexto: {role_context}\n\n"
+                        "Decide la mejor forma de obtener los datos solicitados:\n"
+                        "1. HERRAMIENTA pre-construida: si existe una que responde exactamente la consulta, usala.\n"
+                        "2. SQL SELECT validado: para consultas especificas como calcular promedios ponderados, "
+                        "filtrar por condiciones (reprobados, calificaciones > X), o combinar varias tablas "
+                        "de manera que ninguna herramienta pre-construida cubre. "
+                        "Es preferible SQL preciso a herramienta inexacta o generar needs_clarification.\n"
+                        "3. NONE: solo si la consulta es imposible, fuera de alcance o peligrosa.\n\n"
+                        "REGLAS SQL OBLIGATORIAS: solo SELECT, sin comentarios (-- # /*), sin punto y coma, "
+                        "sin UNION inseguro. Declarar tablas[] y columnas[]. Usar :authUserId para seguridad.\n"
+                        "IMPORTANTE: En columns[], lista SOLO columnas reales de las tablas "
+                        "(ej: ['nombre', 'apellido_paterno', 'boleta', 'clave_grupo', 'calificacion', 'ponderacion']). "
+                        "NO incluir aliases calculados como 'promedio' — esos van solo en el SELECT.\n"
+                        f"{sql_guidance}"
+                        "Formatos de respuesta:\n"
+                        "Herramienta: {\"type\":\"tool\", \"tool_name\":\"...\", \"args\":{}, \"purpose\":\"...\", \"expected_result\":\"...\"}\n"
+                        "SQL: {\"type\":\"sql\", \"sql\":\"SELECT...\", \"params\":{}, \"tables\":[\"...\"], \"columns\":[\"...\"], \"purpose\":\"...\", \"expected_result\":\"...\"}\n"
+                        "Sin datos: {\"type\":\"none\", \"reason\":\"...\"}\n"
+                        "Devuelve SOLO JSON valido."
                     ),
                 },
                 {
@@ -352,7 +464,7 @@ class ChatbotESCOM:
             response = self.client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=messages,
-                max_tokens=520,
+                max_tokens=720,
                 temperature=0,
                 response_format={"type": "json_object"},
             )
@@ -393,25 +505,49 @@ class ChatbotESCOM:
             return fallback
 
         try:
+            roles = safe_str_list(context.get("roles", []))
+            role_context = str(context.get("role_context", ""))
+            is_teacher = "profesor" in roles
+
+            analysis_rules = (
+                "ANALISIS PARA PROFESOR:\n"
+                "- Si los datos contienen calificaciones (campos promedio, calificacion, promedioActual, "
+                "o filas con columna 'promedio'): identifica y NOMBRA explicitamente a los alumnos con "
+                "promedio < 6.0. Di 'Van reprobando: [nombres con su promedio]'.\n"
+                "- Si los datos incluyen multiples grupos, organiza la respuesta por grupo: "
+                "'En el grupo 1CM1 (Fund. de Prog.) van reprobando: ...'\n"
+                "- Formula de promedio ponderado: Parcial1*30% + Parcial2*30% + Final*40%.\n"
+                "- Si los datos son una lista de alumnos sin calificaciones, menciona cuantos hay.\n"
+                "- NUNCA digas 'los datos estan en la tabla' ni 'consulte el sistema'. Analiza y sintetiza.\n"
+            ) if is_teacher else (
+                "ANALISIS PARA ALUMNO:\n"
+                "- Habla siempre en segunda persona ('tu horario', 'tus calificaciones', 'tu promedio').\n"
+                "- Si hay calificaciones, menciona el promedio si esta disponible y si va aprobando o reprobando.\n"
+                "- Si el kardex muestra materias reprobadas, mencionalas brevemente.\n"
+            )
+
             messages = [
                 {
                     "role": "system",
                     "content": (
                         "Eres el asistente academico de ESCOM para SAES 2.0. "
                         "Devuelve SOLO JSON: reply, status, intent, confidence, data, suggested_actions.\n\n"
-                        "REGLAS ESTRICTAS:\n"
+                        f"CONTEXTO: {role_context}\n\n"
+                        f"{analysis_rules}\n"
+                        "REGLAS GENERALES:\n"
                         "- NUNCA uses frases como 'Consulte los datos autorizados en SAES' ni 'encontre esta informacion'.\n"
-                        "- Si hay tool_results con datos reales: escribe una frase amigable y especifica segun el tipo:\n"
-                        "  * horario → 'Aqui esta tu horario con X materias registradas.' o 'El [dia] tienes X clases.'\n"
-                        "  * calificaciones → 'Encontre tus calificaciones del periodo actual.' + detalle clave si hay.\n"
-                        "  * kardex/promedio → 'Tu historial academico muestra X materias cursadas.' + promedio si existe.\n"
-                        "  * perfil → 'Aqui tienes tu informacion de perfil en SAES.'\n"
-                        "  * grupos/horario_profesor → 'Tienes X grupos asignados este periodo.' o similar.\n"
-                        "- Si hay evidence: SINTETIZA en 2-4 oraciones propias en espanol. NUNCA copies texto literal del documento.\n"
-                        "- Para saludos (intent=saludo): saluda calidamente y menciona que puedes hacer.\n"
+                        "- Si hay tool_results con datos reales: ANALIZA los datos y escribe una respuesta especifica:\n"
+                        "  * horario → menciona cuantas materias y los dias/horas clave.\n"
+                        "  * calificaciones_grupo / reprobados → nombra alumnos con bajo promedio.\n"
+                        "  * grupos_profesor → menciona cuantos grupos y sus materias.\n"
+                        "  * lista_alumnos → menciona cuantos alumnos hay en el grupo.\n"
+                        "  * kardex → menciona materias cursadas, aprobadas, reprobadas y promedio.\n"
+                        "  * perfil → resume la informacion clave de perfil.\n"
+                        "- Si hay evidence de reglamento: SINTETIZA en 2-4 oraciones propias. No copies texto literal.\n"
+                        "- Para saludos (intent=saludo): saluda calidamente y describe brevemente lo que puedes hacer segun el rol.\n"
                         "- Para fuera_de_alcance: declina amablemente y sugiere temas disponibles de ESCOM.\n"
-                        "- Si no hay datos ni evidencia relevante: status='needs_clarification', pide mas detalle.\n"
-                        "- Tono: amigable, directo, como un asistente estudiantil.\n"
+                        "- Si no hay datos ni evidencia: status='needs_clarification', pide mas detalle.\n"
+                        "- Tono: amigable, directo, institucional.\n"
                         "- Nunca inventes datos academicos reales.\n"
                         "- status validos: 'answered', 'needs_clarification', 'no_data', 'error'.\n"
                         "- intent: usa el mismo del campo plan.intent recibido, no lo cambies."
@@ -423,7 +559,7 @@ class ChatbotESCOM:
                         {
                             "question": question,
                             "plan": plan,
-                            "tool_results": tool_results,
+                            "tool_results": compact_tool_results_for_responder(tool_results),
                             "evidence": evidence,
                         },
                         ensure_ascii=False,
@@ -433,7 +569,7 @@ class ChatbotESCOM:
             response = self.client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=messages,
-                max_tokens=950,
+                max_tokens=2500,
                 temperature=0.2,
                 response_format={"type": "json_object"},
             )
@@ -845,8 +981,9 @@ def build_local_response(
         }
 
     if data:
+        reply = _empty_reply_for_intent(intent) if empty_table else _data_reply_for_intent(intent, data)
         return {
-            "reply": "No encontre clases registradas para ese dia en tu horario actual." if empty_table else "Aqui tienes la informacion academica solicitada.",
+            "reply": reply,
             "status": "no_data" if empty_table else "answered",
             "intent": intent,
             "confidence": confidence,
@@ -877,6 +1014,21 @@ def build_local_response(
             "suggested_actions": suggested_actions_for_intent(intent),
         }
 
+    # Intents que dependen de calificaciones: mensaje específico cuando no hay datos
+    GRADE_INTENTS = {"consulta_alumnos_reprobados", "consulta_calificaciones_grupo"}
+    if intent in GRADE_INTENTS:
+        if tool_results:
+            reply = "No hay calificaciones capturadas aún en tus grupos para el periodo activo. Una vez que se registren las calificaciones parciales o finales, podrás ver esta información."
+        else:
+            reply = "No pude calcular los promedios de tus alumnos en este momento. Verifica que haya calificaciones registradas en el periodo activo e intenta de nuevo."
+        return {
+            "reply": reply,
+            "status": "no_data",
+            "intent": intent,
+            "confidence": confidence,
+            "suggested_actions": suggested_actions_for_intent(intent),
+        }
+
     return {
         "reply": "No tengo suficiente informacion confiable para responder eso. Puedes darme mas detalle del tramite o dato que necesitas?",
         "status": "no_data",
@@ -884,6 +1036,40 @@ def build_local_response(
         "confidence": confidence,
         "suggested_actions": [],
     }
+
+
+def _empty_reply_for_intent(intent: str) -> str:
+    messages = {
+        "consulta_alumnos_reprobados": "En este momento no hay alumnos con promedio reprobatorio en tus grupos del periodo activo.",
+        "consulta_calificaciones_grupo": "Aun no hay calificaciones registradas para ese grupo en este periodo.",
+        "lista_alumnos_grupo": "No hay alumnos inscritos activos en ese grupo.",
+        "consulta_horario": "No encontre clases registradas para ese dia en tu horario actual.",
+        "consulta_horario_profesor": "No encontre clases para ese dia en tu horario del periodo activo.",
+    }
+    return messages.get(intent, "No encontre datos para esa consulta.")
+
+
+def _data_reply_for_intent(intent: str, data: dict[str, Any]) -> str:
+    if "horario" in intent:
+        rows = data.get("rows", [])
+        if rows:
+            dias = sorted({row.get("Dia", "") for row in rows if row.get("Dia")})
+            n = len(rows)
+            dias_txt = ", ".join(dias) if dias else "varios dias"
+            return f"Tienes {n} sesion(es) de clase en los siguientes dias: {dias_txt}."
+    if intent in {"consulta_grupos_profesor", "consulta_grupos_profesor"}:
+        items = data.get("items", [])
+        return f"Tienes {len(items)} grupo(s) asignado(s) en este periodo."
+    if intent == "lista_alumnos_grupo":
+        rows = data.get("rows", []) or data.get("items", [])
+        return f"El grupo tiene {len(rows)} alumno(s) inscrito(s)."
+    if intent in {"consulta_alumnos_reprobados", "consulta_calificaciones_grupo"}:
+        rows = data.get("rows", [])
+        return f"Se encontraron {len(rows)} alumno(s) con calificaciones registradas."
+    if intent == "consulta_kardex":
+        items = data.get("items", []) or data.get("rows", [])
+        return f"Tu kardex tiene {len(items)} registro(s) academico(s)."
+    return "Aqui tienes la informacion academica solicitada."
 
 
 def normalize_response(raw: dict[str, Any], fallback: dict[str, Any]) -> dict[str, Any]:
@@ -903,12 +1089,54 @@ def normalize_response(raw: dict[str, Any], fallback: dict[str, Any]) -> dict[st
     }
 
 
+def compact_tool_results_for_responder(tool_results: list[Any]) -> list[Any]:
+    compacted = []
+    for tr in tool_results:
+        item = safe_dict(tr)
+        data = item.get("data")
+        if isinstance(data, dict):
+            compact_data: dict[str, Any] = {}
+            for key, value in data.items():
+                if isinstance(value, list):
+                    compact_data[key] = value[:20]
+                elif isinstance(value, dict) and len(str(value)) > 500:
+                    compact_data[key] = dict(list(value.items())[:10])
+                else:
+                    compact_data[key] = value
+            data = compact_data
+        elif isinstance(data, list):
+            data = data[:20]
+        compacted.append({
+            "source": item.get("source"),
+            "name": item.get("name"),
+            "purpose": item.get("purpose"),
+            "data": data,
+        })
+    return compacted
+
+
 def structured_data_from_tool_results(tool_results: list[Any]) -> dict[str, Any] | None:
     if not tool_results:
         return None
     first = safe_dict(tool_results[0])
     name = str(first.get("name") or "")
     data = first.get("data")
+
+    # Teacher schedule: usa "horarios" (aplanado) en lugar de "horario" (alumno)
+    if isinstance(data, dict) and isinstance(data.get("horarios"), list) and data.get("horarios"):
+        rows = [
+            {
+                "Grupo": slot.get("claveGrupo") or slot.get("clave_grupo", ""),
+                "Materia": slot.get("nombreMateria") or slot.get("nombre_materia", ""),
+                "Dia": slot.get("dia") or slot.get("diaGrupo", ""),
+                "Hora": f"{slot.get('horaInicio') or slot.get('hora_inicio', '')} - {slot.get('horaFin') or slot.get('hora_fin', '')}",
+                "Aula": slot.get("nombreAula") or slot.get("nombre_aula", ""),
+            }
+            for slot in data["horarios"]
+            if isinstance(slot, dict)
+        ]
+        if rows:
+            return {"type": "table", "columns": ["Grupo", "Materia", "Dia", "Hora", "Aula"], "rows": rows}
 
     if isinstance(data, dict) and isinstance(data.get("horario"), list):
         rows = [
@@ -971,6 +1199,7 @@ def compact_capsule_for_model(capsule: dict[str, Any]) -> dict[str, Any]:
     return {
         "question": capsule.get("question"),
         "roles": safe_str_list(capsule.get("roles")),
+        "role_context": capsule.get("role_context", ""),
         "user_context": capsule.get("user_context"),
         "conversation": {
             "summary": context.get("summary"),
@@ -991,6 +1220,12 @@ def infer_tool_name(question: str, intent: str, roles: list[str]) -> str | None:
     is_teacher = "profesor" in roles
     if looks_like_schedule_lookup(text):
         return "teacher.schedule" if is_teacher else "student.schedule"
+    # Intents de calificaciones/reprobados: devolver None para que el LLM escriba SQL
+    if intent in {"consulta_alumnos_reprobados", "consulta_calificaciones_grupo"}:
+        return None
+    # Verificar keywords de reprobados ANTES del match generico de 'alumno'
+    if is_teacher and any(word in text for word in ["reprobando", "reprobado", "reprobados", "reprobar", "reprueba", "vanmal"]):
+        return None
     if is_teacher and any(word in text for word in ["alumno", "lista", "inscrito"]):
         return "teacher.group_students"
     if is_teacher and "grupo" in text:
@@ -999,6 +1234,8 @@ def infer_tool_name(question: str, intent: str, roles: list[str]) -> str | None:
         return "teacher.schedule"
     if "kardex" in text or "historial" in text:
         return "student.kardex"
+    if is_teacher and ("calificacion" in text or "parcial" in text):
+        return None  # Profesor: dejar al LLM escribir SQL para calificaciones
     if "calificacion" in text or "parcial" in text:
         return "student.grades"
     if "promedio" in text or "avance" in text:
@@ -1148,6 +1385,8 @@ def infer_target(intent: str, is_teacher: bool) -> str:
         "consulta_perfil": "teacher_profile" if is_teacher else "student_profile",
         "consulta_grupos_profesor": "teacher_groups",
         "lista_alumnos_grupo": "teacher_group_students",
+        "consulta_alumnos_reprobados": "teacher_failing_students",
+        "consulta_calificaciones_grupo": "teacher_group_grades",
         "institucional_general": "institutional_knowledge",
     }
     return targets.get(intent, "clarification")
