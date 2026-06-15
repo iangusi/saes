@@ -11,6 +11,32 @@ from groq import Groq
 load_dotenv()
 
 
+WORD_SYNONYMS: dict[str, str] = {
+    "reinscribirme": "reinscripcion",
+    "reinscribirte": "reinscripcion",
+    "reinscribirse": "reinscripcion",
+    "reinscribir": "reinscripcion",
+    "inscribirme": "inscripcion",
+    "inscribirte": "inscripcion",
+    "inscribirse": "inscripcion",
+    "bajarme": "baja",
+    "bajarte": "baja",
+    "dictaminado": "dictamen",
+    "dictaminarse": "dictamen",
+    "extraordinario": "ets",
+    "extraordinaria": "ets",
+}
+
+
+STOP_WORDS_ES = {
+    "que", "como", "para", "una", "uno", "los", "las", "del", "sus", "por",
+    "con", "sin", "son", "ser", "fue", "han", "hay", "mas", "pero", "ese",
+    "esta", "este", "esa", "cuando", "puede", "tiene", "tener", "debe",
+    "deben", "cuales", "cual", "cuanto", "tengo", "puedo", "pasa", "estan",
+    "ver", "dar", "siendo", "dado", "hacer", "hago", "tuvo", "tres", "dos",
+    "solo", "cada", "algo", "algun", "alguna", "mis", "eso", "cual", "sobre",
+}
+
 INTENTS = {
     "consulta_horario",
     "consulta_kardex",
@@ -26,6 +52,7 @@ INTENTS = {
     "institucional_general",
     "ambigua",
     "fuera_de_alcance",
+    "saludo",
 }
 
 
@@ -99,6 +126,10 @@ class ChatbotESCOM:
         contexto = contexto or {}
         local = self._classify_locally(pregunta, roles, contexto)
 
+        # Intents conversacionales con alta confianza — no delegar a Groq para evitar overrides
+        if local.get("intent") in {"saludo", "fuera_de_alcance"}:
+            return local
+
         if not self.client:
             return local
 
@@ -146,7 +177,23 @@ class ChatbotESCOM:
         if not q:
             return ambiguous("¿Qué necesitas consultar en SAES?")
 
-        if any(word in q for word in ["chiste", "receta", "futbol", "politica", "bitcoin", "clima"]):
+        q_tokens = set(q.split())
+        GREETING_TOKENS = {"hola", "hey", "hi", "saludos"}
+        GREETING_PHRASES = ["buenos dias", "buenas tardes", "buenas noches", "buen dia", "que tal", "como estas"]
+        CLOSING_TOKENS = {"gracias", "adios", "bye", "chao"}
+        CLOSING_PHRASES = ["hasta luego", "hasta pronto", "ok gracias", "muchas gracias", "nos vemos"]
+
+        if (any(w in q_tokens for w in GREETING_TOKENS) or any(ph in q for ph in GREETING_PHRASES)) and len(q.split()) <= 6:
+            return result("saludo", 0.95, False, False, "conversacional")
+
+        if (any(w in q_tokens for w in CLOSING_TOKENS) or any(ph in q for ph in CLOSING_PHRASES)) and len(q.split()) <= 5:
+            return result("fuera_de_alcance", 0.90, False, False, "despedida")
+
+        if any(word in q for word in [
+            "chiste", "receta", "futbol", "politica", "bitcoin", "clima",
+            "resultado", "partido", "equipo", "deportes", "musica", "pelicula",
+            "serie", "cocina", "america", "restaurant", "restaurante",
+        ]):
             return result("fuera_de_alcance", 0.86, False, False, "out_of_scope")
 
         if looks_like_schedule_lookup(q):
@@ -168,7 +215,7 @@ class ChatbotESCOM:
             ("consulta_perfil", ["perfil", "mis datos", "mi informacion", "correo", "boleta", "numero de empleado"], True, False),
             ("lista_alumnos_grupo", ["alumnos", "lista", "inscritos"], True, False),
             ("consulta_grupos_profesor", ["mis grupos", "grupos asignados", "cupo"], True, False),
-            ("institucional_general", ["reglamento", "ets", "dictamen", "requisitos", "gestion escolar"], False, True),
+            ("institucional_general", ["reglamento", "ets", "dictamen", "requisitos", "gestion escolar", "reinscribirme", "reinscribir", "inscribirme", "extraordinaria", "extraordinario", "saberes previos"], False, True),
         ]
 
         for intent, words, requires_db, requires_dataset in checks:
@@ -202,6 +249,10 @@ class ChatbotESCOM:
         )
         fallback = build_local_plan(question, roles, local_intent)
 
+        # Intents conversacionales — Groq no aporta valor y puede sobreescribir incorrectamente
+        if local_intent.get("intent") in {"saludo", "fuera_de_alcance"}:
+            return fallback
+
         if not self.client:
             return fallback
 
@@ -210,12 +261,23 @@ class ChatbotESCOM:
                 {
                     "role": "system",
                     "content": (
-                        "Eres PlannerAgent para un chatbot academico SAES. No respondas al alumno. "
-                        "Devuelve solo JSON valido con: intent, confidence, needs_clarification, "
-                        "clarification_question, required_context, agents, safety_flags, response_strategy. "
-                        "Los agentes validos son database, regulation y responder. Pide aclaracion si la "
-                        "pregunta depende de una referencia no resuelta. Prefiere herramientas del catalogo; "
-                        "nunca propongas acciones de escritura ni consultar datos de otra persona."
+                        "Eres PlannerAgent para el chatbot academico de SAES 2.0 en ESCOM. "
+                        "Decide que agentes ejecutar segun la pregunta. Devuelve SOLO JSON valido.\n\n"
+                        "REGLAS DE DECISION:\n"
+                        "1. SALUDO/DESPEDIDA/CASUAL (hola, gracias, adios, como estas, buenas, etc.): "
+                        "intent='saludo' o 'fuera_de_alcance', agents=[responder]. Sin database ni regulation.\n"
+                        "2. DATOS PERSONALES (horario, calificaciones, kardex, promedio, perfil, grupos, reinscripcion, bajas): "
+                        "agents=[database, responder]. Usa el intent especifico.\n"
+                        "3. TRAMITES/REGLAMENTO (que es un ETS, dictamen, requisitos, normativa, fechas, reglamento): "
+                        "agents=[regulation, responder]. intent='institucional_general'.\n"
+                        "4. COMBINADO (bajas con reglas, reinscripcion con elegibilidad y normativa): "
+                        "agents=[database, regulation, responder].\n"
+                        "5. AMBIGUO o referencia no resuelta: needs_clarification=true, solo responder.\n\n"
+                        "Campos requeridos: intent, confidence, needs_clarification, clarification_question, "
+                        "required_context, agents, safety_flags, response_strategy. "
+                        f"Intents validos: {', '.join(sorted(INTENTS))}. "
+                        "Agentes validos: database, regulation, responder. "
+                        "Nunca propongas escritura de datos ni acceso a datos de otro usuario."
                     ),
                 },
                 {
@@ -233,7 +295,7 @@ class ChatbotESCOM:
             response = self.client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=messages,
-                max_tokens=650,
+                max_tokens=900,
                 temperature=0,
                 response_format={"type": "json_object"},
             )
@@ -306,13 +368,13 @@ class ChatbotESCOM:
         goal = str(payload.get("goal") or "").strip()
         question = str(context.get("question") or inputs.get("question") or goal).strip()
         intent = str(inputs.get("intent") or safe_dict(payload.get("plan")).get("intent") or "institucional_general")
-        docs = self.retrieve_documents(f"{question} {goal}", intent, limit=5)
+        docs = self.retrieve_documents(question, intent, limit=3)
         return {
             "evidence": [
                 {
                     "source": doc.id,
                     "title": doc.titulo,
-                    "content": truncate(str(doc.contenido), 1200),
+                    "content": truncate(str(doc.contenido), 600),
                     "data": {"tema": doc.tema, "prioridad": doc.prioridad},
                 }
                 for doc in docs
@@ -335,10 +397,24 @@ class ChatbotESCOM:
                 {
                     "role": "system",
                     "content": (
-                        "Eres ResponderAgent de SAES. Devuelve solo JSON compatible con el frontend: "
-                        "reply, status, intent, confidence, data, suggested_actions. Responde en espanol. "
-                        "Usa solo tool_results y evidence entregados; no inventes datos academicos. "
-                        "Si falta evidencia o datos, dilo claramente y usa status no_data o needs_clarification."
+                        "Eres el asistente academico de ESCOM para SAES 2.0. "
+                        "Devuelve SOLO JSON: reply, status, intent, confidence, data, suggested_actions.\n\n"
+                        "REGLAS ESTRICTAS:\n"
+                        "- NUNCA uses frases como 'Consulte los datos autorizados en SAES' ni 'encontre esta informacion'.\n"
+                        "- Si hay tool_results con datos reales: escribe una frase amigable y especifica segun el tipo:\n"
+                        "  * horario → 'Aqui esta tu horario con X materias registradas.' o 'El [dia] tienes X clases.'\n"
+                        "  * calificaciones → 'Encontre tus calificaciones del periodo actual.' + detalle clave si hay.\n"
+                        "  * kardex/promedio → 'Tu historial academico muestra X materias cursadas.' + promedio si existe.\n"
+                        "  * perfil → 'Aqui tienes tu informacion de perfil en SAES.'\n"
+                        "  * grupos/horario_profesor → 'Tienes X grupos asignados este periodo.' o similar.\n"
+                        "- Si hay evidence: SINTETIZA en 2-4 oraciones propias en espanol. NUNCA copies texto literal del documento.\n"
+                        "- Para saludos (intent=saludo): saluda calidamente y menciona que puedes hacer.\n"
+                        "- Para fuera_de_alcance: declina amablemente y sugiere temas disponibles de ESCOM.\n"
+                        "- Si no hay datos ni evidencia relevante: status='needs_clarification', pide mas detalle.\n"
+                        "- Tono: amigable, directo, como un asistente estudiantil.\n"
+                        "- Nunca inventes datos academicos reales.\n"
+                        "- status validos: 'answered', 'needs_clarification', 'no_data', 'error'.\n"
+                        "- intent: usa el mismo del campo plan.intent recibido, no lo cambies."
                     ),
                 },
                 {
@@ -349,7 +425,6 @@ class ChatbotESCOM:
                             "plan": plan,
                             "tool_results": tool_results,
                             "evidence": evidence,
-                            "fallback_local": fallback,
                         },
                         ensure_ascii=False,
                     ),
@@ -358,7 +433,7 @@ class ChatbotESCOM:
             response = self.client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=messages,
-                max_tokens=620,
+                max_tokens=950,
                 temperature=0.2,
                 response_format={"type": "json_object"},
             )
@@ -421,18 +496,46 @@ class ChatbotESCOM:
 
         return {"reply": self.fallback_response(intent, docs), "documents": [doc.id for doc in docs]}
 
-    def retrieve_documents(self, pregunta: str, intent: str, limit: int = 4) -> list[KnowledgeDocument]:
-        q_words = set(split_words(pregunta))
-        intent_words = set(split_words(intent.replace("_", " ")))
-        scored: list[tuple[int, KnowledgeDocument]] = []
+    def retrieve_documents(self, pregunta: str, intent: str, limit: int = 3) -> list[KnowledgeDocument]:
+        all_words = set(split_words(pregunta))
+        q_words = all_words - STOP_WORDS_ES
+        if not q_words:
+            q_words = all_words
+        # Expandir con sinónimos para variantes verbales y morfológicas
+        expanded = set()
+        for w in q_words:
+            expanded.add(WORD_SYNONYMS.get(w, w))
+        q_words = expanded
+
+        intent_words = set(split_words(intent.replace("_", " "))) - STOP_WORDS_ES
+        scored: list[tuple[float, KnowledgeDocument]] = []
 
         for doc in self.documents:
-            doc_words = set(split_words(" ".join([doc.tema, doc.titulo, doc.contenido, *doc.palabras_clave])))
-            score = len(q_words & doc_words) * 3 + len(intent_words & doc_words)
+            # Capa 1 — señal primaria: título + palabras clave (peso ×8)
+            title_kw_words = set(split_words(" ".join([doc.tema, doc.titulo, *doc.palabras_clave])))
+            title_score = len(q_words & title_kw_words) * 8
+
+            # Capa 2 — bonus exacto: palabra clave en el id del documento (10 pts por palabra)
+            id_parts = set(doc.id.replace("_", " ").split())
+            id_bonus = sum(10 for w in q_words if w in id_parts)
+
+            # Capa 3 — señal secundaria: match en contenido (peso ×2, independiente de longitud)
+            content_words = set(split_words(doc.contenido))
+            content_score = len(q_words & content_words) * 2
+
+            # Capa 4 — alineación con intent específico (excluye institucional_general por ser ruidoso)
+            intent_score = 0
+            if intent != "institucional_general":
+                intent_score = len(intent_words & title_kw_words) * 3
+
+            # Boosts por intent concreto
+            boost = 0
             if intent == "baja_materias" and doc.tema in {"reinscripcion", "gestion"}:
-                score += 3
+                boost += 3
             if intent in {"estado_reinscripcion", "recomendacion_reinscripcion"} and doc.tema == "reinscripcion":
-                score += 4
+                boost += 4
+
+            score = title_score + id_bonus + content_score + intent_score + boost
             if score > 0:
                 scored.append((score, doc))
 
@@ -464,6 +567,46 @@ class ChatbotESCOM:
 
 def build_local_plan(question: str, roles: list[str], intent_result: dict[str, Any]) -> dict[str, Any]:
     intent = str(intent_result.get("intent") or "ambigua")
+
+    if intent in {"saludo", "fuera_de_alcance"}:
+        reply_hint = str(intent_result.get("target") or "")
+        return {
+            "intent": intent,
+            "confidence": clamp_float(intent_result.get("confidence"), 0.0, 1.0, default=0.90),
+            "needs_clarification": False,
+            "clarification_question": None,
+            "required_context": {
+                "conversation_history": False,
+                "student_profile": False,
+                "database": False,
+                "regulation": False,
+            },
+            "agents": [
+                {
+                    "name": "responder",
+                    "goal": "Responder de forma conversacional.",
+                    "inputs": {"intent": intent, "target": reply_hint},
+                }
+            ],
+            "safety_flags": [],
+            "response_strategy": "Respuesta conversacional directa sin consultar datos.",
+        }
+
+    # Confianza ≤ 0.55 = clasificación por defecto (ningún keyword coincidió).
+    # En ese caso no activar agentes de datos; pedir aclaración directamente.
+    local_conf = clamp_float(intent_result.get("confidence"), 0.0, 1.0, default=0.55)
+    if intent == "institucional_general" and local_conf <= 0.55:
+        return {
+            "intent": "ambigua",
+            "confidence": 0.45,
+            "needs_clarification": True,
+            "clarification_question": "No estoy seguro de entender tu pregunta. ¿Necesitas info de tu horario, calificaciones, kardex, reinscripcion, o algun tramite escolar en ESCOM?",
+            "required_context": {"conversation_history": False, "student_profile": False, "database": False, "regulation": False},
+            "agents": [{"name": "responder", "goal": "Pedir aclaracion al usuario.", "inputs": {"intent": "ambigua"}}],
+            "safety_flags": [],
+            "response_strategy": "Pedir aclaracion.",
+        }
+
     needs_database = bool(intent_result.get("requires_database"))
     needs_regulation = bool(intent_result.get("requires_dataset")) or bool(
         re.search(r"\b(reglamento|ets|dictamen|baja|reinscripcion|gestion escolar)\b", normalize(question))
@@ -521,6 +664,9 @@ def build_local_plan(question: str, roles: list[str], intent_result: dict[str, A
 def normalize_planner_plan(raw: dict[str, Any], fallback: dict[str, Any]) -> dict[str, Any]:
     required = safe_dict(raw.get("required_context"))
     agents = [step for step in (normalize_agent_step(value) for value in safe_list(raw.get("agents"))) if step]
+
+    if fallback.get("intent") in {"saludo", "fuera_de_alcance"}:
+        return fallback
 
     if fallback.get("intent") in {"consulta_horario", "consulta_horario_profesor"} and raw.get("intent") == "institucional_general":
         return fallback
@@ -637,6 +783,44 @@ def build_local_response(
     intent = str(plan.get("intent") or "ambigua")
     confidence = clamp_float(plan.get("confidence"), 0.0, 1.0, default=0.6)
 
+    if intent == "saludo":
+        greetings = [
+            "¡Hola! Soy el asistente de ESCOM. Puedo ayudarte con tu horario, calificaciones, kardex, reinscripción y trámites escolares. ¿En qué te puedo ayudar?",
+            "¡Buen día! ¿En qué puedo ayudarte hoy? Pregúntame sobre tus materias, horario o cualquier trámite escolar.",
+            "¡Hola! Estoy aquí para apoyarte. Puedes consultarme sobre tu situación académica en SAES.",
+        ]
+        return {
+            "reply": random.choice(greetings),
+            "status": "answered",
+            "intent": intent,
+            "confidence": confidence,
+            "suggested_actions": [],
+        }
+
+    if intent == "fuera_de_alcance":
+        agents = safe_list(plan.get("agents"))
+        target = str(safe_dict(agents[0]).get("inputs", {}).get("target", "") if agents else "")
+        if "despedida" in target:
+            closings = [
+                "¡Hasta luego! Espero haberte ayudado. ¡Éxito en tus estudios!",
+                "¡Fue un placer! Recuerda que puedes consultarme cuando necesites información académica.",
+                "¡Hasta pronto! No dudes en preguntar si tienes alguna duda más.",
+            ]
+            return {
+                "reply": random.choice(closings),
+                "status": "answered",
+                "intent": intent,
+                "confidence": confidence,
+                "suggested_actions": [],
+            }
+        return {
+            "reply": "Ese tema está fuera de mis especialidades. Puedo ayudarte con tu horario, calificaciones, kardex, reinscripción, bajas y trámites escolares de ESCOM. ¿En qué te puedo apoyar?",
+            "status": "no_data",
+            "intent": intent,
+            "confidence": confidence,
+            "suggested_actions": [],
+        }
+
     if bool(plan.get("needs_clarification")):
         return {
             "reply": str(plan.get("clarification_question") or "Necesito un poco mas de informacion para ayudarte."),
@@ -662,7 +846,7 @@ def build_local_response(
 
     if data:
         return {
-            "reply": "No encontre clases registradas para ese dia en tu horario actual." if empty_table else "Consulte los datos autorizados en SAES y encontre esta informacion.",
+            "reply": "No encontre clases registradas para ese dia en tu horario actual." if empty_table else "Aqui tienes la informacion academica solicitada.",
             "status": "no_data" if empty_table else "answered",
             "intent": intent,
             "confidence": confidence,
@@ -672,9 +856,19 @@ def build_local_response(
 
     if evidence:
         first = safe_dict(evidence[0])
-        title = str(first.get("title") or "la informacion institucional disponible")
+        title = str(first.get("title") or "informacion institucional")
         content = str(first.get("content") or "").strip()
-        reply = f"Con base en {title}: {truncate(content, 650)}" if content else "Encontre evidencia institucional relacionada, pero necesito mas detalle para darte una respuesta precisa."
+        if content:
+            sentences = [s.strip() for s in re.split(r"[.!?\n]", content) if len(s.strip()) > 30]
+            brief = ". ".join(sentences[:2]).strip()
+            if brief and not brief.endswith("."):
+                brief += "."
+            reply = f"Sobre {title.lower()}: {brief}"
+            if len(evidence) > 1:
+                otros = str(safe_dict(evidence[1]).get("title") or "temas relacionados")
+                reply += f" Tambien encontre informacion sobre {otros}. ¿Quieres que profundice en algo especifico?"
+        else:
+            reply = f"Encontre informacion sobre {title}, pero necesito que me des mas detalles sobre que quieres saber exactamente."
         return {
             "reply": reply,
             "status": "answered" if content else "needs_clarification",
@@ -702,7 +896,7 @@ def normalize_response(raw: dict[str, Any], fallback: dict[str, Any]) -> dict[st
     return {
         "reply": str(item.get("reply")),
         "status": status,
-        "intent": str(item.get("intent") or fallback.get("intent") or "ambigua"),
+        "intent": str(fallback.get("intent") or item.get("intent") or "ambigua"),
         "confidence": clamp_float(item.get("confidence"), 0.0, 1.0, default=float(fallback.get("confidence") or 0.6)),
         "data": item.get("data") if isinstance(item.get("data"), dict) else fallback.get("data"),
         "suggested_actions": safe_list(item.get("suggested_actions")) or safe_list(fallback.get("suggested_actions")),
