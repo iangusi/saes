@@ -1,0 +1,41 @@
+# Stage 1: Builder
+FROM node:20-alpine as builder
+
+WORKDIR /app
+
+# Copy root package files
+COPY package.json package-lock.json* ./
+
+# Copy workspace packages
+COPY packages/shared ./packages/shared
+COPY apps/web ./apps/web
+
+# Install dependencies
+RUN npm ci
+
+# Build web application
+RUN npm run build --workspace=apps/web
+
+# Stage 2: Runtime (Nginx)
+FROM nginx:alpine
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy built files from builder
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+
+# Copy entrypoint script for environment variable substitution
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+# Expose port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:80 || exit 1
+
+# Run entrypoint
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
