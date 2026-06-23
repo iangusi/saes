@@ -15,8 +15,17 @@ async function run() {
   await conn.query('UPDATE usuario SET password_hash = ? WHERE identificador IN (?, ?)', [
     '$2a$10$CBar31hSxYGe/KB0WiIDmOQ5q8jP.z0BOtxKbKaetyciXrUauBpLG',
     '2026630001',
-    'EMP025'
+    'EMP025',
+    'ADMIN001'
 ]);
+  /*Log para corroborar si todos los usuarios fueron actualizados con el resultado de la consulta*/
+  const [rows] = await conn.query('SELECT identificador, password_hash FROM usuario WHERE identificador IN (?, ?, ?)', [
+    '2026630001',
+    'EMP025', 
+    'ADMIN001'
+  ]);
+  console.log('Updated users:', rows);
+
   console.log('Password updated successfully.');
   await conn.end();
 }

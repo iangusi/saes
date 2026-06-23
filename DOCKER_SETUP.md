@@ -20,7 +20,7 @@ cp .env.docker .env
 
 Edita `.env` con tus credenciales (especialmente):
 - `DB_PASS` - Contraseña de MySQL
-- `GROQ_API_KEY` - API Key de Groq para el chatbot
+- `GROQ_API_KEY` - API Key de Groq para el chatbot (obtener en: https://console.groq.com/home)
 - `SMTP_USER` y `SMTP_PASS` - Credenciales de email
 - `JWT_SECRET` - Clave secreta para JWT (cambiar en producción)
 
@@ -108,6 +108,8 @@ docker-compose exec web sh
 # Ejecutar comandos en contenedor
 docker-compose exec api npm run db:schema
 docker-compose exec api npm run db:seed
+docker-compose exec api node scripts/update-password.js #Para actualizar la contraseña y poder iniciar sesión
+docker-compose exec api node scripts/create-admin.js #Para iniciar sesión como administrador
 
 # Detener servicios
 docker-compose down                   # Con preservación de volúmenes
